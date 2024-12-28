@@ -1,0 +1,199 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    height: 100vh; /* Ensure full height layout */
+    overflow: hidden; /* Prevent body scroll */
+}
+
+.toolkit-container {
+    width: 150px; /* Fixed width */
+    background-color: #f4f4f4;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; /* Prevent shrinking */
+    position: fixed; /* Keeps it in place */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    overflow-y: auto; /* If content overflows, allow scrolling inside toolkit */
+}
+
+.svg-container {
+    flex: 1; /* Take up remaining space */
+    margin-left: 150px; /* Add margin to account for fixed toolkit */
+    overflow: auto; /* Make scrollable */
+    height: 100%; /* Ensure it uses full height */
+    background: #ffffff; /* Optional: A background color */
+}
+
+
+
+.toolkit-section {
+    /* display: flex;
+    flex-direction: column; */
+    margin-bottom: 20px;
+}
+
+.toolkit-section h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.shapes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.Alighn{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolkit-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    cursor: grab;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.font-type{
+    display: flex;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.toolkit-item:hover {
+    /* background-color: #e0e0e0; */
+    transform: scale(1.1);
+}
+
+.toolkit-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+ 
+.toolkit-item:active {
+    cursor: grabbing;
+}
+
+
+
+
+.topup {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+} 
+
+ 
+/* .hidden {
+    display: none;
+} */
+
+.topup{
+    font-size: medium;
+}
+
+.parent {
+    stroke: black;
+    fill: none;
+    /* stroke-width: 0.1; */
+    transition: stroke-width 0.3s, fill 0.3s;
+    pointer-events: all;
+}
+
+.parent:hover {
+    fill: lightblue;
+    stroke-width: 0.5;
+}
+ 
+.merge_Cell {
+    fill: transparent;
+    stroke-width: 0.2;
+    stroke: rgb(25, 16, 124);
+}
+
+.grid-cell {
+    stroke: rgb(182, 250, 182);
+    stroke-width: 0.1;
+    fill: none;
+}
+
+.selected {
+    stroke-width: 1px;
+    fill: lightgreen !important;
+}
+
+.col-resize {
+    cursor: col-resize;
+}
+
+.row-resize {
+    cursor: row-resize;
+}
+
+.nw-resize {
+    cursor: nw-resize;
+}
+
+.context-menu {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-option {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.menu-option:hover {
+    background-color: #f0f0f0;
+}
+
+button {
+    background-color: rgb(232, 227, 227);
+    color: white;
+    border: none;
+    border-radius: 5%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+button:hover {
+    background-color: darkred;
+    cursor: pointer;
+}
