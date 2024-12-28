@@ -31,10 +31,15 @@ $.ajax({
 
 function createSVGLayout(data) {
     const container = document.getElementById("svg-container");
+
+    // Clear previous content
     container.innerHTML = "";
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
+
+    let currentY = 0;
+    const rowRects = [];
 
     const calculateDimensions = () => {
         const totalWidth = data.layout.table.row[0].column.reduce((sum, col) => sum + col.meta.width, 0);
@@ -43,66 +48,103 @@ function createSVGLayout(data) {
     };
 
     const { totalWidth, totalHeight } = calculateDimensions();
+
+    // Set dynamic width and height for SVG
     svg.setAttribute("width", totalWidth);
     svg.setAttribute("height", totalHeight);
     svg.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
 
-    let currentY = 0, rowRects = [];
-
     data.layout.table.row.forEach((row, rowIndex) => {
+        const rowHeight = row.meta.height;
         let currentX = 0;
+
         row.column.forEach((col, colIndex) => {
+            const colWidth = col.meta.width;
+
+
+            const colHeight = col.meta.height;
+
+            // Create group for cell
             const rectGroup = document.createElementNS(svgNS, "g");
             rectGroup.setAttribute("class", "cell-group");
 
+            // Add grid background
             const gridGroup = document.createElementNS(svgNS, "g");
             gridGroup.setAttribute("class", "grid-group");
-            createBackgroundGrid(gridGroup, currentX, currentY, col.meta.width, col.meta.height);
+            createBackgroundGrid(gridGroup, currentX, currentY, colWidth, colHeight);
             rectGroup.appendChild(gridGroup);
 
+            // Create cell rectangle
             const cellId = `cell_${colIndex}_${rowIndex}`;
             const rect = document.createElementNS(svgNS, "rect");
             rect.setAttribute("x", currentX);
             rect.setAttribute("y", currentY);
-            rect.setAttribute("width", col.meta.width);
-            rect.setAttribute("height", col.meta.height);
+            rect.setAttribute("width", colWidth);
+            rect.setAttribute("height", colHeight);
             rect.setAttribute("class", "parent");
             rect.setAttribute("id", cellId);
             rect.setAttribute("fill", "none");
 
-            if (!Object.entries(mergedCellData).some(([_, mc]) => mc.children.includes(cellId))) {
-                rectGroup.appendChild(rect);
-            } else {
-                rect.style.display = "none";
+            // Check if this cell is part of a merged cell
+            let isMerged = false;
+            for (const [id, mergedCell] of Object.entries(mergedCellData)) {
+                if (mergedCell.children.includes(cellId)) {
+                    // This cell is part of a merged cell, hide it
+                    rect.style.display = "none";
+                    isMerged = true;
+                    break;
+                }
             }
 
+            if (!isMerged) {
+                rectGroup.appendChild(rect);
+            }
+
+            // Store reference for resizing/merging
             if (!rowRects[rowIndex]) rowRects[rowIndex] = [];
             rowRects[rowIndex].push(rect);
 
             svg.appendChild(rectGroup);
+
+            // Apply resize logic
             resize(rect, rowRects, rowIndex, colIndex);
-            currentX += col.meta.width;
+
+            currentX += colWidth;
         });
-        currentY += row.meta.height;
+
+        currentY += rowHeight;
+
     });
 
-    Object.entries(mergedCellData).forEach(([id, mergedCell]) => {
+    // Re-render existing merged cells with updated dimensions
+    for (const [id, mergedCell] of Object.entries(mergedCellData)) {
+        // Validate merged cell children
         const children = mergedCell.children.map((childId) =>
             rowRects.flat().find((rect) => rect.getAttribute("id") === childId)
         );
 
-        if (children.some((child) => !child)) return;
+        if (children.some((child) => !child)) {
+            console.warn(`Skipping regeneration of merged cell ${id} due to missing child cells`);
+            continue; // Skip if any child cell is missing
+        }
 
+        // Recalculate merged cell dimensions
         const xs = children.map((rect) => parseFloat(rect.getAttribute("x")));
         const ys = children.map((rect) => parseFloat(rect.getAttribute("y")));
         const widths = children.map((rect) => parseFloat(rect.getAttribute("width")));
         const heights = children.map((rect) => parseFloat(rect.getAttribute("height")));
 
-        mergedCell.x = Math.min(...xs);
-        mergedCell.y = Math.min(...ys);
-        mergedCell.width = Math.max(...xs.map((x, i) => x + widths[i])) - mergedCell.x;
-        mergedCell.height = Math.max(...ys.map((y, i) => y + heights[i])) - mergedCell.y;
+        const minX = Math.min(...xs);
+        const minY = Math.min(...ys);
+        const maxX = Math.max(...xs.map((x, i) => x + widths[i]));
+        const maxY = Math.max(...ys.map((y, i) => y + heights[i]));
 
+        mergedCell.x = minX;
+        mergedCell.y = minY;
+        mergedCell.width = maxX - minX;
+        mergedCell.height = maxY - minY;
+
+        // Create updated merged cell rectangle
         const newRect = document.createElementNS(svgNS, "rect");
         newRect.setAttribute("x", mergedCell.x);
         newRect.setAttribute("y", mergedCell.y);
@@ -113,91 +155,158 @@ function createSVGLayout(data) {
 
         mergeMap.set(newRect, children);
         svg.appendChild(newRect);
+
+
+
+
+
+        // Apply resize logic to merged cells
         resize(newRect, rowRects, -1, -1);
-    });
+
+    }
+
 
     container.appendChild(svg);
+
+    // Attach event listeners
     svg.addEventListener("dblclick", () => mergeSelectedCells(svg, rowRects));
+
+    // Save the initial grid state
     saveGridState(rowRects);
+
+    console.log("Merged Cell Data:", mergedCellData);
 }
 
 function createBackgroundGrid(group, startX, startY, colWidth, colHeight) {
-    const svgNS = "http://www.w3.org/2000/svg", cellSize = 10;
-    const cols = Math.ceil(colWidth / cellSize), rows = Math.ceil(colHeight / cellSize);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const cellWidth = 10;
+    const cellHeight = 10;
 
-    for (let x = 0; x < cols; x++) {
-        for (let y = 0; y < rows; y++) {
-            const rect = document.createElementNS(svgNS, "rect");
-            rect.setAttribute("x", startX + x * cellSize);
-            rect.setAttribute("y", startY + y * cellSize);
-            rect.setAttribute("width", cellSize);
-            rect.setAttribute("height", cellSize);
-            rect.setAttribute("class", "grid-cell");
-            rect.setAttribute("fill", "none");
-            rect.setAttribute("stroke", "#ccc");
-            rect.setAttribute("stroke-width", "0.1%");
-            group.appendChild(rect);
+    const numCols = Math.ceil(colWidth / cellWidth);
+    const numRows = Math.ceil(colHeight / cellHeight);
+
+    for (let x = 0; x < numCols; x++) {
+        for (let y = 0; y < numRows; y++) {
+            const gridRect = document.createElementNS(svgNS, "rect");
+            gridRect.setAttribute("x", startX + x * cellWidth);
+            gridRect.setAttribute("y", startY + y * cellHeight);
+            gridRect.setAttribute("width", cellWidth);
+            gridRect.setAttribute("height", cellHeight);
+            gridRect.setAttribute("class", "grid-cell");
+            gridRect.setAttribute("fill", "none");
+            gridRect.setAttribute("stroke", "#ccc");
+            gridRect.setAttribute("stroke-width", "0.1%");
+            group.appendChild(gridRect);
         }
     }
 }
 
-function hoverOnCell(cell) {
-    cell.addEventListener("mouseover", (e) => {
+
+function hoverOnCell(c) {
+    c.addEventListener("mouseover", function (e) {
+        // console.log(e.target.id);
         document.getElementById("hoverdCell").innerText = e.target.id;
     });
+    
 }
 
 function resize(rect, rowRects, rowIndex, colIndex) {
-    rect.addEventListener("mouseover", (e) => !resizing && setCursor(e, rect, rowIndex, rowRects[rowIndex], colIndex));
-    rect.addEventListener("mouseout", () => !resizing && document.body.classList.remove("col-resize", "row-resize", "nw-resize"));
-    rect.addEventListener("mousedown", (e) => handleMouseDown(e, rect, rowRects, rowIndex, colIndex));
-    rect.addEventListener("click", (e) => e.detail === 3 && unmergeCell(rect, rowRects));
+    rect.addEventListener("mouseover", function (e) {
+        if (!resizing) {
+            setCursor(e, rect, rowIndex, rowRects[rowIndex], colIndex);
+        }
+    });
+
+    rect.addEventListener("mouseout", function () {
+        if (!resizing) {
+            document.body.classList.remove("col-resize", "row-resize", "nw-resize");
+        }
+    });
+
+    rect.addEventListener("mousedown", function (e) {
+        handleMouseDown(e, rect, rowRects, rowIndex, colIndex);
+    });
+
+    rect.addEventListener("click", function (e) {
+        if (e.detail === 3) {
+            unmergeCell(rect, rowRects);
+        }
+    });
+
 }
 
-function setCursor(e, rect) {
+function setCursor(event, rect, rowIndex, columnRects, colIndex) {
     const { x, width, y, height } = rect.getBBox();
-    const buffer = 10;
-    document.body.className = 
-        e.clientX >= x + width - buffer && e.clientY >= y + height - buffer ? "nw-resize" :
-        e.clientX >= x + width - buffer ? "col-resize" :
-        e.clientY >= y + height - buffer ? "row-resize" : "";
+    const cursorBuffer = 10;
+
+    document.body.classList.remove("col-resize", "row-resize", "nw-resize");
+
+    if (event.clientX >= x + width - cursorBuffer && event.clientY >= y + height - cursorBuffer) {
+        document.body.classList.add("nw-resize");
+    } else if (event.clientX >= x + width - cursorBuffer) {
+        document.body.classList.add("col-resize");
+    } else if (event.clientY >= y + height - cursorBuffer) {
+        document.body.classList.add("row-resize");
+    }
 }
 
 function handleMouseDown(e, rect, rowRects, rowIndex, colIndex) {
-    const startX = e.clientX, startY = e.clientY;
-    const startWidth = +rect.getAttribute("width"), startHeight = +rect.getAttribute("height");
-    const direction = getResizeDirection(e, rect);
-    if (!direction) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = parseFloat(rect.getAttribute("width"));
+    const startHeight = parseFloat(rect.getAttribute("height"));
+    const resizeDirection = getResizeDirection(e, rect);
+
+    if (!resizeDirection) return;
 
     resizing = true;
-    document.body.classList.add(direction);
+    document.body.classList.add(resizeDirection);
 
-    const onMouseMove = (e) => {
-        const dx = Math.round((e.clientX - startX) / 10) * 10;
-        const dy = Math.round((e.clientY - startY) / 10) * 10;
+    function onMouseMove(e) {
+        let dx = e.clientX - startX;
+        let dy = e.clientY - startY;
 
-        if (direction.includes("col-resize")) {
-            globalWidth = Math.max(startWidth + dx, 100);
-            updateColumnWidth(rect, globalWidth, rowRects, rowIndex, colIndex);
+        dx = Math.round(dx / 10) * 10;
+        dy = Math.round(dy / 10) * 10;
+
+        if (resizeDirection.includes("col-resize")) {
+            const newWidth = Math.max(startWidth + dx, 100);
+            globalWidth = newWidth;
+            updateColumnWidth(rect, newWidth, rowRects, rowIndex, colIndex);
+            // Update global width
         }
-        if (direction.includes("row-resize")) {
-            globalHeight = Math.max(startHeight + dy, 100);
-            updateRowHeight(rect, globalHeight, rowRects, rowIndex);
+
+        if (resizeDirection.includes("row-resize")) {
+            const newHeight = Math.max(startHeight + dy, 100);
+            updateRowHeight(rect, newHeight, rowRects, rowIndex);
+            globalHeight = newHeight; // Update global height
         }
 
-        // updateMergedCellsThrottled(rowRects);
-    };
+        updateMergedCellsThrottled(rowRects);
+    }
 
-    const onMouseUp = () => {
+
+    function onMouseUp() {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("mouseup", onMouseUp);
         resizing = false;
         document.body.classList.remove("col-resize", "row-resize", "nw-resize");
+
+        // Save updated state
         saveGridState(rowRects);
-    };
+    }
+
 
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+}
+
+function updateMergedCellsThrottled(rowRects) {
+    if (animationFrame) return;
+    animationFrame = requestAnimationFrame(() => {
+        updateMergedCells(rowRects);
+        animationFrame = null;
+    });
 }
 
 function getResizeDirection(event, rect) {
@@ -571,7 +680,16 @@ function unmergeCell(rect) {
 }
 
 function redrawSVG() {
-    document.getElementById("svg-container").innerHTML = "";
+    const container = document.getElementById("svg-container");
+    container.innerHTML = ""; // Clear existing content
+    createSVGLayout(originalData); // Rebuild the layout
+}
+
+function updateSVGLayout() {
+    const container = document.getElementById("svg-container");
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
     createSVGLayout(originalData);
 }
 
@@ -582,24 +700,32 @@ function saveGridState(rowRects, mergedCellsDetails = []) {
         layout: {
             table: {
                 row: rowRects.map((row, rowIndex) => ({
-                    meta: { height: parseFloat(row[0]?.getAttribute("height")) || 0 },
+                    meta: {
+                        height: parseFloat(row[0]?.getAttribute("height")) || 0,
+                    },
                     column: row
                         .filter((col) => {
+                            const cellId = col.getAttribute("id");
                             const mergedRegionId = col.getAttribute("data-merged-parent");
+
                             if (mergedRegionId && !processedMergedRegions.has(mergedRegionId)) {
-                                const mergedCells = rowRects.flatMap((rRow, rRowIndex) =>
-                                    rRow.filter((cell) =>
-                                        cell.getAttribute("data-merged-parent") === mergedRegionId
-                                    ).map((cell, colIndex) => ({
-                                        id: cell.getAttribute("id"),
-                                        rowIndex: rRowIndex,
-                                        colIndex,
-                                        meta: {
-                                            width: parseFloat(cell.getAttribute("width")) || 0,
-                                            height: parseFloat(cell.getAttribute("height")) || 0,
-                                        },
-                                    }))
-                                );
+                                const mergedCells = [];
+                                rowRects.forEach((rRow, rRowIndex) => {
+                                    rRow.forEach((cell, colIndex) => {
+                                        if (cell.getAttribute("data-merged-parent") === mergedRegionId) {
+                                            mergedCells.push({
+                                                id: cell.getAttribute("id"),
+                                                rowIndex: rRowIndex,
+                                                colIndex,
+                                                meta: {
+                                                    width: parseFloat(cell.getAttribute("width")) || 0,
+                                                    height: parseFloat(cell.getAttribute("height")) || 0,
+                                                },
+                                            });
+                                        }
+                                    });
+                                });
+
                                 mergedCellsDetails.push({
                                     id: mergedRegionId,
                                     x: parseFloat(col.getAttribute("x")),
@@ -608,10 +734,12 @@ function saveGridState(rowRects, mergedCellsDetails = []) {
                                     height: parseFloat(col.getAttribute("height")) || 0,
                                     children: mergedCells,
                                 });
+
                                 processedMergedRegions.add(mergedRegionId);
-                                return false;
+                                return false; // Exclude merged region parent cell from columns
                             }
-                            return true;
+
+                            return true; // Include non-merged cells
                         })
                         .map((col, colIndex) => ({
                             id: col.getAttribute("id"),
@@ -623,20 +751,29 @@ function saveGridState(rowRects, mergedCellsDetails = []) {
                             },
                         })),
                 })),
-                mergedCells: mergedCellsDetails,
+                mergedCells: mergedCellsDetails, // Include merged cells details in layout
             },
         },
     };
 
     fetch("http://localhost:3000/grid.json", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify(updatedLayout),
     })
-        .then((response) => console.log(response.ok ? "Grid state saved successfully!" : "Failed to save grid state."))
-        .catch((error) => console.error("Error saving grid state:", error));
+        .then((response) => {
+            if (response.ok) {
+                console.log("Grid state saved successfully!");
+            } else {
+                console.error("Failed to save grid state.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error saving grid state:", error);
+        });
 }
-
 
 
 
@@ -644,10 +781,15 @@ function saveGridState(rowRects, mergedCellsDetails = []) {
 document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("svg-container");
     const toolkitItems = document.querySelectorAll(".toolkit-item");
+
+
     const svgNS = "http://www.w3.org/2000/svg";
 
     let selectedShape = null;
     let offsetX, offsetY;
+
+
+
 
     // Context menu on right-click
     container.addEventListener("contextmenu", function (event) {
@@ -730,6 +872,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("click", removeContextMenu, { once: true });
     });
 
+
     // Close context menu on click elsewhere 
     document.addEventListener("click", removeContextMenu);
 
@@ -781,6 +924,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+
     function addMenuOption(menu, text, action) {
         const option = document.createElement("div");
         option.className = "menu-option";
@@ -803,113 +947,182 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function addRow(cellId, position) {
         const cellParts = cellId.match(/cell_(\d+)_(\d+)/);
-        if (!cellParts || cellParts.length < 3) return console.error("Invalid cell ID format:", cellId);
-    
+        if (!cellParts || cellParts.length < 3) {
+            console.error("Invalid cell ID format:", cellId);
+            return;
+        }
+
         const rowIndex = parseInt(cellParts[2]);
         const insertIndex = position === "above" ? rowIndex : rowIndex + 1;
+
         const refRow = originalData.layout.table.row[rowIndex];
-        const refRowHeight = parseFloat(refRow.meta.height), newRowHeight = 100;
+        const refRowHeight = parseFloat(refRow.meta.height);
+        const newRowHeight = 100; // Fixed height for the new row
+
         saveState();
-    
+
+        // Adjust `y` positions for rows below
         for (let i = insertIndex; i < originalData.layout.table.row.length; i++) {
             const row = originalData.layout.table.row[i];
             row.meta.y += newRowHeight;
-            row.column.forEach(cell => cell.meta.y += newRowHeight);
+            row.column.forEach(cell => {
+                cell.meta.y += newRowHeight;
+            });
         }
-    
+
+        // Create new row
         const newRow = {
-            meta: { ...refRow.meta, y: position === "above" ? refRow.meta.y : refRow.meta.y + refRowHeight, height: newRowHeight },
+            meta: {
+                ...refRow.meta,
+                y: position === "above" ? refRow.meta.y : refRow.meta.y + refRowHeight,
+                height: newRowHeight,
+            },
             column: refRow.column.map(cell => ({
                 ...cell,
-                meta: { ...cell.meta, y: position === "above" ? cell.meta.y : cell.meta.y + refRowHeight, height: newRowHeight },
+                meta: {
+                    ...cell.meta,
+                    y: position === "above" ? cell.meta.y : cell.meta.y + refRowHeight,
+                    height: newRowHeight,
+                },
             })),
         };
-    
-        Object.values(mergedCellData).forEach(mergedCell => {
+
+        // Adjust only the affected merged cells
+        Object.entries(mergedCellData).forEach(([id, mergedCell]) => {
             if (mergedCell.y >= refRow.meta.y) {
                 mergedCell.y += newRowHeight;
                 mergedCell.height += newRowHeight;
             }
         });
-    
+
+        // Insert new row into the layout
         originalData.layout.table.row.splice(insertIndex, 0, newRow);
+
+        // Redraw layout
         redrawSVG();
         console.log(`Row added ${position} at index ${rowIndex}`);
     }
-    
+
     function addColumn(cellId, position) {
         const cellParts = cellId.match(/cell_(\d+)_(\d+)/);
-        if (!cellParts || cellParts.length < 3) return console.error("Invalid cell ID format:", cellId);
-    
+        if (!cellParts || cellParts.length < 3) {
+            console.error("Invalid cell ID format:", cellId);
+            return;
+        }
+
         const colIndex = parseInt(cellParts[1]);
         const insertIndex = position === "left" ? colIndex : colIndex + 1;
+
         saveState();
-    
-        Object.values(mergedCellData).forEach(mergedCell => {
+
+        // Adjust only the affected merged cells
+        Object.entries(mergedCellData).forEach(([id, mergedCell]) => {
             if (mergedCell.x >= colIndex * 100) {
                 mergedCell.x += 100;
                 mergedCell.width += 100;
             }
         });
-    
+
+        // Insert new column into each row
         originalData.layout.table.row.forEach(row => {
             const refCell = row.column[colIndex];
-            row.column.splice(insertIndex, 0, {
+            const newCell = {
                 ...refCell,
-                meta: { ...refCell.meta, x: position === "left" ? refCell.meta.x : refCell.meta.x + refCell.meta.width, width: 100 },
-            });
+                meta: {
+                    ...refCell.meta,
+                    x: position === "left" ? refCell.meta.x : refCell.meta.x + refCell.meta.width,
+                    width: 100,
+                },
+            };
+            row.column.splice(insertIndex, 0, newCell);
         });
-    
+
+        // Redraw layout
         redrawSVG();
+        saveState();
         console.log(`Column added ${position} at index ${colIndex}`);
     }
-    
+
     function deleteRow(cellId) {
         const cellParts = cellId.match(/cell_(\d+)_(\d+)/);
-        if (!cellParts || cellParts.length < 3) return console.error("Invalid cell ID format:", cellId);
-    
+        if (!cellParts || cellParts.length < 3) {
+            console.error("Invalid cell ID format:", cellId);
+            return;
+        }
+
         const rowIndex = parseInt(cellParts[2]);
-        if (originalData.layout.table.row.length <= 1) return console.warn("Cannot delete the last remaining row.");
-    
-        saveState();
-    
-        mergeMap.forEach((originalCells, mergedRect) => {
-            const mergedRowIndices = originalCells.map(cell => parseInt(cell.getAttribute("data-row-index")));
-            const rowHeight = originalData.layout.table.row[rowIndex].meta.height;
-            if (mergedRowIndices.includes(rowIndex)) mergedRect.setAttribute("height", parseFloat(mergedRect.getAttribute("height")) - rowHeight);
-            else if (Math.min(...mergedRowIndices) > rowIndex) mergedRect.setAttribute("y", parseFloat(mergedRect.getAttribute("y")) - rowHeight);
-        });
-    
-        originalData.layout.table.row.splice(rowIndex, 1);
-        document.getElementById("svg-container").innerHTML = "";
-        createSVGLayout(originalData);
-        console.log(`Row deleted at index ${rowIndex}`);
+        if (originalData.layout.table.row.length > 1) {
+            saveState();
+            // Adjust merged cells
+            mergeMap.forEach((originalCells, mergedRect) => {
+                const mergedRowIndices = originalCells.map(cell => parseInt(cell.getAttribute("data-row-index")));
+                if (mergedRowIndices.includes(rowIndex)) {
+                    const height = parseFloat(mergedRect.getAttribute("height"));
+                    mergedRect.setAttribute("height", height - originalData.layout.table.row[rowIndex].meta.height);
+                } else if (Math.min(...mergedRowIndices) > rowIndex) {
+                    const y = parseFloat(mergedRect.getAttribute("y"));
+                    mergedRect.setAttribute("y", y - originalData.layout.table.row[rowIndex].meta.height);
+                }
+            });
+
+            // Delete the row
+            originalData.layout.table.row.splice(rowIndex, 1);
+
+            // Update the layout
+            document.getElementById("svg-container").innerHTML = "";
+            createSVGLayout(originalData);
+
+            // Save the updated state
+
+
+            console.log(`Row deleted at index ${rowIndex}`);
+        } else {
+            console.warn("Cannot delete the last remaining row.");
+        }
     }
-    
+
     function deleteColumn(cellId) {
         const cellParts = cellId.match(/cell_(\d+)_(\d+)/);
-        if (!cellParts || cellParts.length < 3) return console.error("Invalid cell ID format:", cellId);
-    
+        if (!cellParts || cellParts.length < 3) {
+            console.error("Invalid cell ID format:", cellId);
+            return;
+        }
+
         const colIndex = parseInt(cellParts[1]);
-        if (originalData.layout.table.row[0].column.length <= 1) return console.warn("Cannot delete the last remaining column.");
-    
-        saveState();
-    
-        originalData.layout.table.row.forEach(row => {
-            mergeMap.forEach((originalCells, mergedRect) => {
-                const mergedColIndices = originalCells.map(cell => parseInt(cell.getAttribute("data-col-index")));
-                const colWidth = row.column[colIndex].meta.width;
-                if (mergedColIndices.includes(colIndex)) mergedRect.setAttribute("width", parseFloat(mergedRect.getAttribute("width")) - colWidth);
-                else if (Math.min(...mergedColIndices) > colIndex) mergedRect.setAttribute("x", parseFloat(mergedRect.getAttribute("x")) - colWidth);
+        if (originalData.layout.table.row[0].column.length > 1) {
+            saveState();
+            originalData.layout.table.row.forEach(row => {
+                // Adjust merged cells
+                mergeMap.forEach((originalCells, mergedRect) => {
+                    const mergedColIndices = originalCells.map(cell => parseInt(cell.getAttribute("data-col-index")));
+                    if (mergedColIndices.includes(colIndex)) {
+                        const width = parseFloat(mergedRect.getAttribute("width"));
+                        mergedRect.setAttribute("width", width - row.column[colIndex].meta.width);
+                    } else if (Math.min(...mergedColIndices) > colIndex) {
+                        const x = parseFloat(mergedRect.getAttribute("x"));
+                        mergedRect.setAttribute("x", x - row.column[colIndex].meta.width);
+                    }
+                });
+
+                // Delete the column
+                row.column.splice(colIndex, 1);
             });
-            row.column.splice(colIndex, 1);
-        });
-    
-        document.getElementById("svg-container").innerHTML = "";
-        createSVGLayout(originalData);
-        console.log(`Column deleted at index ${colIndex}`);
+
+            // Update the layout
+            document.getElementById("svg-container").innerHTML = "";
+            createSVGLayout(originalData);
+
+            // Save the updated state
+
+
+            console.log(`Column deleted at index ${colIndex}`);
+        } else {
+            console.warn("Cannot delete the last remaining column.");
+        }
     }
-    
+
+
+
     // Initialize drag from the toolkit
     toolkitItems.forEach(item => {
         item.addEventListener("dragstart", event => {
@@ -937,7 +1150,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 break;
             }
         }
-    }); 
+    });
 
     // Handle drop event
     container.addEventListener("drop", (event) => {
@@ -1110,9 +1323,243 @@ document.addEventListener("DOMContentLoaded", function () {
             saveState(); // Save the final state after dragging
         }
         selectedShape = null;
-        container.removeEventListener("mousemove", drag);
-        container.removeEventListener("mouseup", endDrag);
+        svgContainer.removeEventListener("mousemove", drag);
+        svgContainer.removeEventListener("mouseup", endDrag);
     };
+
+    function addText(cellId) {
+        const cell = document.getElementById(cellId);
+
+        // Create the editable div
+        const textBox = document.createElement("div");
+        textBox.setAttribute("id", `text_${cellId}`);
+        textBox.setAttribute("class", "text-box");
+        textBox.setAttribute("contenteditable", "true");
+        textBox.setAttribute("placeholder", "Enter text...");
+        textBox.style.position = "absolute";
+        textBox.style.left = `${cell.getBoundingClientRect().x}px`;
+        textBox.style.top = `${cell.getBoundingClientRect().y}px`;
+        textBox.style.width = `${cell.getBoundingClientRect().width}px`;
+        textBox.style.height = `${cell.getBoundingClientRect().height}px`;
+        textBox.style.border = "1px solid #ccc";
+        textBox.style.padding = "5px";
+        textBox.style.boxSizing = "border-box";
+        textBox.style.overflow = "hidden";
+        textBox.style.display = "flex";
+        textBox.style.justifyContent = "flex-start";
+        textBox.style.alignItems = "flex-start";
+        textBox.style.background = "white";
+        textBox.style.wordWrap = "break-word";
+        textBox.style.wordBreak = "break-word";
+        textBox.style.overflowWrap = "break-word";
+        textBox.style.whiteSpace = "pre-wrap";
+        textBox.style.resize = "auto";
+
+        // Hide scrollbar but enable scrolling
+        textBox.style.overflowY = "scroll";
+        textBox.style.scrollbarWidth = "none"; // For Firefox
+        textBox.style.msOverflowStyle = "none"; // For Internet Explorer/Edge
+
+        // Add the textbox to the DOM
+        document.body.appendChild(textBox);
+
+
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "X";
+        closeButton.style.position = "absolute";
+        closeButton.style.display = "none"; // Initially hidden
+        closeButton.style.zIndex = "1000";
+        closeButton.style.cursor = "pointer";
+
+        document.body.appendChild(closeButton);
+        textBox.focus();
+
+        document.querySelectorAll(".toolkit-item").forEach((button) => {
+            button.addEventListener("click", (event) => {
+                const shape = event.currentTarget.getAttribute("data-shape");
+                const textBox = document.querySelector(".text-box"); // Assumes only one active text box at a time
+
+                if (textBox) {
+                    switch (shape) {
+                        case "alighn-left":
+                            textBox.style.justifyContent = "flex-start";
+
+                            break;
+                        case "alighn-center":
+                            textBox.style.justifyContent = "center";
+
+                            break;
+                        case "alighn-right":
+                            textBox.style.justifyContent = "flex-end";
+
+                            break;
+                    }
+                }
+            });
+        });
+
+        // Function to update textbox position and dimensions dynamically
+        const updateTextBoxPosition = () => {
+            const rect = cell.getBoundingClientRect();
+            textBox.style.left = `${rect.left}px`;
+            textBox.style.top = `${rect.top}px`;
+            textBox.style.width = `${rect.width}px`;
+            textBox.style.height = `${rect.height}px`;
+
+            // Update close button position
+            closeButton.style.left = `${rect.right - 20}px`;
+            closeButton.style.top = `${rect.top}px`;
+        };
+
+        // Initial update
+        updateTextBoxPosition();
+
+        // Use a MutationObserver to track position and size changes of the cell
+        const observer = new MutationObserver(updateTextBoxPosition);
+        observer.observe(cell, { attributes: true, childList: false, subtree: false });
+
+        // ResizeObserver for further adjustments if required
+        const resizeObserver = new ResizeObserver(updateTextBoxPosition);
+        resizeObserver.observe(cell);
+
+        // Show the close button on hover
+        textBox.addEventListener("mouseenter", () => {
+            closeButton.style.display = "block";
+        });
+        textBox.addEventListener("mouseleave", () => {
+            closeButton.style.display = "none";
+        });
+
+        // Close button to remove textBox
+        closeButton.addEventListener("click", function () {
+            textBox.remove();
+            closeButton.remove();
+            observer.disconnect();
+            resizeObserver.disconnect();
+            elementsMap.delete(cellId);
+        });
+        // saveState();
+        // Store the text box and close button in the map
+        elementsMap.set(cellId, { element: textBox, closeButton });
+
+    }
+
+    function uploadPhoto(cellId) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.setAttribute("id", `image_${cellId}`);
+                    const cell = document.getElementById(cellId);
+                    img.style.position = "absolute";
+                    img.style.left = `${cell.getBoundingClientRect().left}px`;
+                    img.style.top = `${cell.getBoundingClientRect().top}px`;
+                    img.style.width = `${cell.getBoundingClientRect().width}px`;
+                    img.style.height = `${cell.getBoundingClientRect().height}px`;
+
+                    // Create the close button
+                    const closeButton = document.createElement("button");
+                    closeButton.textContent = "X";
+                    closeButton.style.position = "absolute";
+                    closeButton.style.display = "none"; // Initially hidden
+                    closeButton.style.zIndex = "1000";
+                    closeButton.style.cursor = "pointer";
+
+                    // Append both elements to the body
+                    document.body.appendChild(img);
+                    document.body.appendChild(closeButton);
+
+                    // Update close button position dynamically
+                    const updateCloseButtonPosition = () => {
+                        closeButton.style.left = `${img.getBoundingClientRect().right - 20}px`;
+                        closeButton.style.top = `${img.getBoundingClientRect().top}px`;
+                    };
+                    updateCloseButtonPosition();
+
+                    // Show the close button on hover
+                    img.addEventListener("mouseenter", () => {
+                        closeButton.style.display = "block";
+                    });
+                    img.addEventListener("mouseleave", () => {
+                        closeButton.style.display = "none";
+                    });
+
+                    // Add event listener to close button to delete image
+                    closeButton.addEventListener("click", function () {
+                        img.remove();
+                        closeButton.remove();
+                        elementsMap.delete(cellId);
+
+                    });
+
+                    // Store the image and close button in the map
+                    elementsMap.set(cellId, { element: img, closeButton });
+                };
+                reader.readAsDataURL(file);
+            }
+
+        });
+        input.click();
+
+    }
+
+    const fontTypes = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
+    const fontSizes = ["12px", "14px", "16px", "18px", "20px", "24px", "30px"];
+
+    // Populate font type dropdown
+    const fontTypeDropdown = document.getElementById("font-type-dropdown");
+    fontTypes.forEach((font) => {
+        const option = document.createElement("option");
+        option.value = font;
+        option.textContent = font;
+        fontTypeDropdown.appendChild(option);
+    });
+
+    // Populate font size dropdown
+    const fontSizeDropdown = document.getElementById("font-size-dropdown");
+    fontSizes.forEach((size) => {
+        const option = document.createElement("option");
+        option.value = size;
+        option.textContent = size;
+        fontSizeDropdown.appendChild(option);
+    });
+
+    // Event listener for font type change
+    fontTypeDropdown.addEventListener("change", () => {
+        const selectedFont = fontTypeDropdown.value;
+        const textBox = document.querySelector(".text-box");
+        if (textBox) {
+            textBox.style.fontFamily = selectedFont;
+        }
+    });
+
+    // Event listener for font size change
+    fontSizeDropdown.addEventListener("change", () => {
+        const selectedSize = fontSizeDropdown.value;
+        const textBox = document.querySelector(".text-box");
+        if (textBox) {
+            textBox.style.fontSize = selectedSize;
+        }
+    });
+
+    // Ensure the dropdowns reflect the current font of the active text box
+    document.addEventListener("click", (event) => {
+        const textBox = event.target.closest(".text-box");
+        if (textBox) {
+            const currentFont = window.getComputedStyle(textBox).fontFamily.replace(/['"]/g, "");
+            const currentSize = window.getComputedStyle(textBox).fontSize;
+
+            // Set dropdowns to match current font and size
+            fontTypeDropdown.value = fontTypes.includes(currentFont) ? currentFont : "";
+            fontSizeDropdown.value = fontSizes.includes(currentSize) ? currentSize : "";
+        }
+    });
 
     function addResizeHandles(shape) {
         const resizeHandleSize = 6; // Handle size
@@ -1224,175 +1671,91 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("mousemove", doResize);
         document.addEventListener("mouseup", stopResize);
     }
+    
 
-    function createCloseButton(targetElement, cellId) {
-        const closeButton = document.createElement("button");
-        closeButton.textContent = "X";
-        closeButton.style.position = "absolute";
-        closeButton.style.display = "none"; // Initially hidden
-        closeButton.style.zIndex = "1000";
-        closeButton.style.cursor = "pointer";
-    
-        // Show the close button on hover
-        targetElement.addEventListener("mouseenter", () => closeButton.style.display = "block");
-        targetElement.addEventListener("mouseleave", () => closeButton.style.display = "none");
-    
-        // Add event listener to close button to delete target element
-        closeButton.addEventListener("click", () => {
-            targetElement.remove();
-            closeButton.remove();
-            elementsMap.delete(cellId);
-        });
-    
-        return closeButton;
-    }
-    
-    function updateElementPosition(targetElement, referenceElement, closeButton) {
-        const rect = referenceElement.getBoundingClientRect();
-        Object.assign(targetElement.style, {
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            width: `${rect.width}px`,
-            height: `${rect.height}px`
-        });
-    
-        if (closeButton) {
-            closeButton.style.left = `${rect.right - 20}px`;
-            closeButton.style.top = `${rect.top}px`;
+    // Global variables for selected shape and context menu
+
+
+    // Add a right-click menu for shapes
+    svgContainer.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+
+        // Close any existing context menu
+        if (contextMenu) {
+            contextMenu.remove();
         }
-    }
-    
-    function observeElementChanges(referenceElement, targetElement, closeButton) {
-        const updatePosition = () => updateElementPosition(targetElement, referenceElement, closeButton);
-    
-        const observer = new MutationObserver(updatePosition);
-        observer.observe(referenceElement, { attributes: true });
-    
-        const resizeObserver = new ResizeObserver(updatePosition);
-        resizeObserver.observe(referenceElement);
-    
-        return { observer, resizeObserver };
-    }
-    
-    function addText(cellId) {
-        const cell = document.getElementById(cellId);
-    
-        const textBox = document.createElement("div");
-        Object.assign(textBox, {
-            id: `text_${cellId}`,
-            className: "text-box",
-            contentEditable: "true",
-            placeholder: "Enter text..."
-        });
-        Object.assign(textBox.style, {
-            position: "absolute",
-            border: "1px solid #ccc",
-            padding: "5px",
-            boxSizing: "border-box",
-            background: "white",
-            whiteSpace: "pre-wrap",
-            overflowWrap: "break-word",
-            overflowY: "scroll",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "flex-start"
-        });
-    
-        const closeButton = createCloseButton(textBox, cellId);
-        document.body.appendChild(textBox);
-        document.body.appendChild(closeButton);
 
-        document.querySelectorAll(".toolkit-item").forEach((button) => {
-            button.addEventListener("click", (event) => {
-                const shape = event.currentTarget.getAttribute("data-shape");
-                const textBox = document.querySelector(".text-box"); // Assumes only one active text box at a time
-    
-                if (textBox) {
-                    switch (shape) {
-                        case "alighn-left":
-                            textBox.style.justifyContent = "flex-start";
-    
-                            break;
-                        case "alighn-center":
-                            textBox.style.justifyContent = "center";
-    
-                            break;
-                        case "alighn-right":
-                            textBox.style.justifyContent = "flex-end";
-    
-                            break;
-                    }
-                }
-            });
-        });
-    
-        const { observer, resizeObserver } = observeElementChanges(cell, textBox, closeButton);
-        updateElementPosition(textBox, cell, closeButton);
-    
-        elementsMap.set(cellId, { element: textBox, closeButton, observer, resizeObserver });
-        textBox.focus();
-    }
-    
-    function uploadPhoto(cellId) {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-    
-        input.addEventListener("change", function () {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const cell = document.getElementById(cellId);
-                    const img = document.createElement("img");
-                    Object.assign(img, { src: e.target.result, id: `image_${cellId}` });
-                    Object.assign(img.style, { position: "absolute" });
-    
-                    const closeButton = createCloseButton(img, cellId);
-                    document.body.appendChild(img);
-                    document.body.appendChild(closeButton);
-    
-                    const { observer, resizeObserver } = observeElementChanges(cell, img, closeButton);
-                    updateElementPosition(img, cell, closeButton);
-    
-                    elementsMap.set(cellId, { element: img, closeButton, observer, resizeObserver });
-                };
-                reader.readAsDataURL(file);
+        // Check if the target is a shape
+        if (!event.target.classList.contains("draggable")) return;
+
+        // Store the clicked shape
+        selectedShape = event.target;
+
+        // Create the context menu
+        contextMenu = document.createElement("div");
+        contextMenu.style.position = "absolute";
+        contextMenu.style.left = `${event.pageX}px`;
+        contextMenu.style.top = `${event.pageY}px`;
+        contextMenu.style.background = "#fff";
+        contextMenu.style.border = "1px solid #ccc";
+        contextMenu.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.2)";
+        contextMenu.style.padding = "5px";
+        contextMenu.style.cursor = "pointer";
+        contextMenu.style.zIndex = "1000";
+
+        // Add "Delete" option
+        const deleteOption = document.createElement("div");
+        deleteOption.textContent = "Delete";
+        deleteOption.style.padding = "5px";
+        deleteOption.style.fontSize = "14px";
+        deleteOption.style.color = "red";
+        deleteOption.addEventListener("click", () => {
+            if (selectedShape) {
+                selectedShape.remove();
+                selectedShape = null;
             }
+            contextMenu.remove();
+            contextMenu = null;
         });
-    
-        input.click();
-    }
-    
-    const fontTypes = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
-    const fontSizes = ["12px", "14px", "16px", "18px", "20px", "24px", "30px"];
-    
-    const populateDropdown = (dropdownId, options) => {
-        const dropdown = document.getElementById(dropdownId);
-        options.forEach(optionText => {
-            const option = document.createElement("option");
-            option.value = optionText;
-            option.textContent = optionText;
-            dropdown.appendChild(option);
-        });
+
+        contextMenu.appendChild(deleteOption);
+        document.body.appendChild(contextMenu);
+
+        // Close the menu when clicking outside
+        document.addEventListener("click", closeContextMenu, { once: true });
+    });
+
+    // Function to close the context menu
+    const closeContextMenu = () => {
+        if (contextMenu) {
+            contextMenu.remove();
+            contextMenu = null;
+        }
     };
-    
-    populateDropdown("font-type-dropdown", fontTypes);
-    populateDropdown("font-size-dropdown", fontSizes);
-    
-    const applyStyle = (dropdownId, styleProperty) => {
-        document.getElementById(dropdownId).addEventListener("change", (e) => {
-            const textBox = document.querySelector(".text-box");
-            if (textBox) textBox.style[styleProperty] = e.target.value;
-        });
-    };
-    
-    applyStyle("font-type-dropdown", "fontFamily");
-    applyStyle("font-size-dropdown", "fontSize");
-    
+
+    // Add keyboard delete functionality
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Delete" && selectedShape) {
+            selectedShape.remove();
+            selectedShape = null;
+        }
+    });
+
+    // Add mouse down event to select shapes
+    svgContainer.addEventListener("mousedown", (event) => {
+        if (event.target.classList.contains("draggable")) {
+            selectedShape = event.target;
+        } else {
+            selectedShape = null;
+        }
+    });
+
+    // Cleanup context menu on window resize or scroll
+    window.addEventListener("resize", closeContextMenu);
+    window.addEventListener("scroll", closeContextMenu);
+
 });
+
 
 function saveState() {
     const svgElement = document.getElementById("svg-container").querySelector("svg");
@@ -1414,6 +1777,7 @@ function saveState() {
     history.push(JSON.stringify(currentState));
     redoStack.length = 0; // Clear redo stack on new action
 }
+
 
 function undo() {
     if (history.length > 0) {
@@ -1449,6 +1813,7 @@ function undo() {
         console.warn("No more actions to undo");
     }
 }
+
 
 function redo() {
     if (redoStack.length > 0) {
@@ -1486,6 +1851,9 @@ function redo() {
 }
 
 
+
+
+
 // Add Event Listeners for Ctrl+Z and Ctrl+Y
 document.addEventListener("keydown", function (event) {
     if (event.ctrlKey && event.key === "z") {
@@ -1497,4 +1865,3 @@ document.addEventListener("keydown", function (event) {
         redo();
     }
 });
-
