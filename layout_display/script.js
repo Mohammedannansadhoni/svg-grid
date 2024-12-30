@@ -1338,7 +1338,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
         // Show the close button on hover
         targetElement.addEventListener("mouseenter", () => closeButton.style.display = "block");
-        targetElement.addEventListener("mouseleave", () => closeButton.style.display = "none");
+        // targetElement.addEventListener("mouseleave", () => closeButton.style.display = "none");
     
         // Add event listener to close button to delete target element
         closeButton.addEventListener("click", () => {
@@ -1601,4 +1601,4 @@ document.addEventListener("keydown", function (event) {
         redo();
     }
 });
-    
+      
