@@ -197,3 +197,9 @@ button:hover {
     background-color: darkred;
     cursor: pointer;
 }
+.hover-highlight {
+    fill: rgba(0, 123, 255, 0.3); /* Background color on hover */
+    stroke: #007bff; /* Border color */
+    stroke-width: 2px;
+}
+

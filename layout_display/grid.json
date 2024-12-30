@@ -30,7 +30,7 @@
               "rowIndex": 0,
               "colIndex": 2,
               "meta": {
-                "width": 200,
+                "width": 100,
                 "height": 100
               }
             },
@@ -78,51 +78,6 @@
                 "width": 100,
                 "height": 100
               }
-            },
-            {
-              "id": "cell_8_0",
-              "rowIndex": 0,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_0",
-              "rowIndex": 0,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_0",
-              "rowIndex": 0,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_0",
-              "rowIndex": 0,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_0",
-              "rowIndex": 0,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
             }
           ]
         },
@@ -154,7 +109,7 @@
               "rowIndex": 1,
               "colIndex": 2,
               "meta": {
-                "width": 200,
+                "width": 100,
                 "height": 100
               }
             },
@@ -202,51 +157,6 @@
                 "width": 100,
                 "height": 100
               }
-            },
-            {
-              "id": "cell_8_1",
-              "rowIndex": 1,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_1",
-              "rowIndex": 1,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_1",
-              "rowIndex": 1,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_1",
-              "rowIndex": 1,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_1",
-              "rowIndex": 1,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
             }
           ]
         },
@@ -278,7 +188,7 @@
               "rowIndex": 2,
               "colIndex": 2,
               "meta": {
-                "width": 200,
+                "width": 100,
                 "height": 100
               }
             },
@@ -326,51 +236,6 @@
                 "width": 100,
                 "height": 100
               }
-            },
-            {
-              "id": "cell_8_2",
-              "rowIndex": 2,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_2",
-              "rowIndex": 2,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_2",
-              "rowIndex": 2,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_2",
-              "rowIndex": 2,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_2",
-              "rowIndex": 2,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
             }
           ]
         },
@@ -402,7 +267,7 @@
               "rowIndex": 3,
               "colIndex": 2,
               "meta": {
-                "width": 200,
+                "width": 100,
                 "height": 100
               }
             },
@@ -450,51 +315,6 @@
                 "width": 100,
                 "height": 100
               }
-            },
-            {
-              "id": "cell_8_3",
-              "rowIndex": 3,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_3",
-              "rowIndex": 3,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_3",
-              "rowIndex": 3,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_3",
-              "rowIndex": 3,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_3",
-              "rowIndex": 3,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
             }
           ]
         },
@@ -526,7 +346,7 @@
               "rowIndex": 4,
               "colIndex": 2,
               "meta": {
-                "width": 200,
+                "width": 100,
                 "height": 100
               }
             },
@@ -570,299 +390,6 @@
               "id": "cell_7_4",
               "rowIndex": 4,
               "colIndex": 7,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_8_4",
-              "rowIndex": 4,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_4",
-              "rowIndex": 4,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_4",
-              "rowIndex": 4,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_4",
-              "rowIndex": 4,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_4",
-              "rowIndex": 4,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            }
-          ]
-        },
-        {
-          "meta": {
-            "height": 100
-          },
-          "column": [
-            {
-              "id": "cell_0_5",
-              "rowIndex": 5,
-              "colIndex": 0,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_1_5",
-              "rowIndex": 5,
-              "colIndex": 1,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_2_5",
-              "rowIndex": 5,
-              "colIndex": 2,
-              "meta": {
-                "width": 200,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_3_5",
-              "rowIndex": 5,
-              "colIndex": 3,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_4_5",
-              "rowIndex": 5,
-              "colIndex": 4,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_5_5",
-              "rowIndex": 5,
-              "colIndex": 5,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_6_5",
-              "rowIndex": 5,
-              "colIndex": 6,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_7_5",
-              "rowIndex": 5,
-              "colIndex": 7,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_8_5",
-              "rowIndex": 5,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_5",
-              "rowIndex": 5,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_5",
-              "rowIndex": 5,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_5",
-              "rowIndex": 5,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_5",
-              "rowIndex": 5,
-              "colIndex": 12,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            }
-          ]
-        },
-        {
-          "meta": {
-            "height": 100
-          },
-          "column": [
-            {
-              "id": "cell_0_6",
-              "rowIndex": 6,
-              "colIndex": 0,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_1_6",
-              "rowIndex": 6,
-              "colIndex": 1,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_2_6",
-              "rowIndex": 6,
-              "colIndex": 2,
-              "meta": {
-                "width": 200,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_3_6",
-              "rowIndex": 6,
-              "colIndex": 3,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_4_6",
-              "rowIndex": 6,
-              "colIndex": 4,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_5_6",
-              "rowIndex": 6,
-              "colIndex": 5,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_6_6",
-              "rowIndex": 6,
-              "colIndex": 6,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_7_6",
-              "rowIndex": 6,
-              "colIndex": 7,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_8_6",
-              "rowIndex": 6,
-              "colIndex": 8,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_9_6",
-              "rowIndex": 6,
-              "colIndex": 9,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_10_6",
-              "rowIndex": 6,
-              "colIndex": 10,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_11_6",
-              "rowIndex": 6,
-              "colIndex": 11,
-              "meta": {
-                "width": 100,
-                "height": 100
-              }
-            },
-            {
-              "id": "cell_12_6",
-              "rowIndex": 6,
-              "colIndex": 12,
               "meta": {
                 "width": 100,
                 "height": 100
