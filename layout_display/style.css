@@ -8,7 +8,7 @@ body {
     display: flex;
     margin: 0;
     font-family: Arial, sans-serif;
-    height: 100vh; /* Ensure full height layout */
+    height: 100vh; /* Ensure full height layout */ 
     overflow: hidden; /* Prevent body scroll */
 }
 

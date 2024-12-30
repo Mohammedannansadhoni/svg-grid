@@ -1535,7 +1535,7 @@ function saveState() {
                 width: textBox.style.width,
                 height: textBox.style.height,
                 content: textBox.innerHTML,
-            }
+            } 
             : null,
     };
 
