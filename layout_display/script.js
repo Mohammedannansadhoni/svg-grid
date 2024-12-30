@@ -795,10 +795,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (cellId && cellId.startsWith("mergeCell_")) {
             // Logic for merged cells
-            const mergedData = mergedCellData[cellId]; // Retrieve metadata for this merged cell
-            addMenuOption(menu, "Split Cell", () => splitMergedCell(target));
-            addMenuOption(menu, "Add Text", () => addText(cellId));
-            addMenuOption(menu, "Upload Photo", () => uploadPhoto(cellId));
         } else if (target.classList.contains("parent")) {
             // Extract column and row indices from cellId
             const cellParts = cellId.match(/cell_(\d+)_(\d+)/);
