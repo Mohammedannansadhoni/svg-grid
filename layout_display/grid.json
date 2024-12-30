@@ -30,7 +30,7 @@
               "rowIndex": 0,
               "colIndex": 2,
               "meta": {
-                "width": 100,
+                "width": 130,
                 "height": 100
               }
             },
@@ -78,6 +78,15 @@
                 "width": 100,
                 "height": 100
               }
+            },
+            {
+              "id": "cell_8_0",
+              "rowIndex": 0,
+              "colIndex": 8,
+              "meta": {
+                "width": 100,
+                "height": 100
+              }
             }
           ]
         },
@@ -109,7 +118,7 @@
               "rowIndex": 1,
               "colIndex": 2,
               "meta": {
-                "width": 100,
+                "width": 130,
                 "height": 100
               }
             },
@@ -157,6 +166,15 @@
                 "width": 100,
                 "height": 100
               }
+            },
+            {
+              "id": "cell_8_1",
+              "rowIndex": 1,
+              "colIndex": 8,
+              "meta": {
+                "width": 100,
+                "height": 100
+              }
             }
           ]
         },
@@ -188,7 +206,7 @@
               "rowIndex": 2,
               "colIndex": 2,
               "meta": {
-                "width": 100,
+                "width": 130,
                 "height": 100
               }
             },
@@ -236,6 +254,15 @@
                 "width": 100,
                 "height": 100
               }
+            },
+            {
+              "id": "cell_8_2",
+              "rowIndex": 2,
+              "colIndex": 8,
+              "meta": {
+                "width": 100,
+                "height": 100
+              }
             }
           ]
         },
@@ -267,7 +294,7 @@
               "rowIndex": 3,
               "colIndex": 2,
               "meta": {
-                "width": 100,
+                "width": 130,
                 "height": 100
               }
             },
@@ -315,6 +342,15 @@
                 "width": 100,
                 "height": 100
               }
+            },
+            {
+              "id": "cell_8_3",
+              "rowIndex": 3,
+              "colIndex": 8,
+              "meta": {
+                "width": 100,
+                "height": 100
+              }
             }
           ]
         },
@@ -346,7 +382,7 @@
               "rowIndex": 4,
               "colIndex": 2,
               "meta": {
-                "width": 100,
+                "width": 130,
                 "height": 100
               }
             },
@@ -394,36 +430,20 @@
                 "width": 100,
                 "height": 100
               }
+            },
+            {
+              "id": "cell_8_4",
+              "rowIndex": 4,
+              "colIndex": 8,
+              "meta": {
+                "width": 100,
+                "height": 100
+              }
             }
           ]
         }
       ],
-      "mergedCells": [
-        {
-          "rowIndex": null,
-          "colIndex": null,
-          "width": 100,
-          "height": 100
-        },
-        {
-          "rowIndex": null,
-          "colIndex": null,
-          "width": 100,
-          "height": 100
-        },
-        {
-          "rowIndex": null,
-          "colIndex": null,
-          "width": 100,
-          "height": 100
-        },
-        {
-          "rowIndex": null,
-          "colIndex": null,
-          "width": 100,
-          "height": 100
-        }
-      ]
+      "mergedCells": []
     }
   }
 }

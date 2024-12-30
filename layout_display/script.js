@@ -345,7 +345,7 @@ function updateColumnWidth(rect, newWidth, rowRects, rowIndex, colIndex) {
     updateSvgDimensions();
     updateMergedCells(rowRects);
     saveGridState(rowRects);
-    
+    saveState();
 }
 
 function updateRowHeight(rect, newHeight, rowRects, rowIndex) {
@@ -409,6 +409,7 @@ function updateRowHeight(rect, newHeight, rowRects, rowIndex) {
 
     // Save the new grid state
     saveGridState(rowRects);
+    saveState();
     
 }
 
@@ -563,6 +564,7 @@ function mergeSelectedCells(svg, rowRects) {
         saveGridState(rowRects, cellDetails); // Pass cell details for saving
 
         console.log("Merge and save complete");
+        saveState();
     }
 }
 
@@ -910,7 +912,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const insertIndex = position === "above" ? rowIndex : rowIndex + 1;
         const refRow = originalData.layout.table.row[rowIndex];
         const refRowHeight = parseFloat(refRow.meta.height), newRowHeight = 100;
-        
+        saveState();
     
         for (let i = insertIndex; i < originalData.layout.table.row.length; i++) {
             const row = originalData.layout.table.row[i];
@@ -944,7 +946,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
         const colIndex = parseInt(cellParts[1]);
         const insertIndex = position === "left" ? colIndex : colIndex + 1;
-        
+        saveState();
     
         Object.values(mergedCellData).forEach(mergedCell => {
             if (mergedCell.x >= colIndex * 100) {
@@ -972,6 +974,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const rowIndex = parseInt(cellParts[2]);
         if (originalData.layout.table.row.length <= 1) return console.warn("Cannot delete the last remaining row.");
     
+        saveState();
         
     
         mergeMap.forEach((originalCells, mergedRect) => {
@@ -994,7 +997,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const colIndex = parseInt(cellParts[1]);
         if (originalData.layout.table.row[0].column.length <= 1) return console.warn("Cannot delete the last remaining column.");
     
-        
+        saveState();
     
         originalData.layout.table.row.forEach(row => {
             mergeMap.forEach((originalCells, mergedRect) => {
@@ -1011,9 +1014,590 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(`Column deleted at index ${colIndex}`);
     }
     
-   
+    toolkitItems.forEach(item => {
+        item.addEventListener("dragstart", event => {
+            const shapeType = item.getAttribute("data-shape");
+            if (!shapeType) {
+                console.error("Shape type is not defined on the dragged item.");
+                return;
+            }
+            event.dataTransfer.setData("shapeType", shapeType);
+            console.log(`Dragging shape: ${shapeType}`);
+        });
+    });
+
+    container.addEventListener("dragover", (event) => {
+        event.preventDefault(); // Allow drop
+        const parent = container.getElementsByClassName("parent");
+        for (let i = 0; i < parent.length; i++) {
+            const cell = parent[i];
+            const cellRect = cell.getBoundingClientRect();
+
+            // Check if the mouse is within the cell's area
+            if (event.clientX >= cellRect.left && event.clientX <= cellRect.right &&
+                event.clientY >= cellRect.top && event.clientY <= cellRect.bottom) {
+                hoveredCellId = cell.id;
+                break;
+            }
+        }
+    }); 
+
+    // Handle drop event
+    container.addEventListener("drop", (event) => {
+        event.preventDefault();
+
+        if (!hoveredCellId) {
+            console.error("No valid cell to drop on.");
+            return;
+        }
+
+        const shapeType = event.dataTransfer.getData("shapeType");
+        if (!shapeType) {
+            console.error("No shape type found during drop.");
+            return;
+        }
+
+        const svg = container.querySelector("svg");
+        const svgRect = svg.getBoundingClientRect();
+        const dropX = event.clientX - svgRect.left;
+        const dropY = event.clientY - svgRect.top;
+
+        // Dynamically fetch updated global cell dimensions
+        const cellWidth = globalWidth || 100; // Default to 100 if globalWidth is undefined
+        const cellHeight = globalHeight || 100; // Default to 100 if globalHeight is undefined
+
+        // Snap to the nearest cell based on the current cell size
+        const snappedX = Math.floor(dropX / cellWidth) * cellWidth;
+        const snappedY = Math.floor(dropY / cellHeight) * cellHeight;
+
+        const row = Math.floor(snappedY / cellHeight); // Row based on Y and cellHeight
+        const col = Math.floor(snappedX / cellWidth);  // Column based on X and cellWidth
+
+        console.log(`Dropped on Cell ID: ${hoveredCellId}, Row: ${row}, Col: ${col}`);
+
+        let newShape;
+        const cellX = snappedX;
+        const cellY = snappedY;
+
+        // Create the shape based on the shape type
+        if (shapeType === "circle") {
+            newShape = document.createElementNS(svgNS, "circle");
+            newShape.setAttribute("cx", cellX + cellWidth / 2);
+            newShape.setAttribute("cy", cellY + cellHeight / 2);
+            newShape.setAttribute("r", Math.min(cellWidth, cellHeight) / 2 - 5);
+            saveState();
+        } else if (shapeType === "square") {
+            newShape = document.createElementNS(svgNS, "rect");
+            newShape.setAttribute("x", cellX);
+            newShape.setAttribute("y", cellY);
+            newShape.setAttribute("width", cellWidth);
+            newShape.setAttribute("height", cellHeight);
+            saveState();
+        } else if (shapeType === "triangle") {
+            newShape = document.createElementNS(svgNS, "polygon");
+            const points = `
+                ${cellX + cellWidth / 2},${cellY}
+                ${cellX},${cellY + cellHeight}
+                ${cellX + cellWidth},${cellY + cellHeight}
+            `;
+            newShape.setAttribute("points", points.trim());
+            saveState();
+        } else if (shapeType === "rectangle") {
+            newShape = document.createElementNS(svgNS, "rect");
+            newShape.setAttribute("x", cellX);
+            newShape.setAttribute("y", cellY);
+            newShape.setAttribute("width", cellWidth * 2);
+            newShape.setAttribute("height", cellHeight);
+            saveState();
+        } else if (shapeType === "rhombus") {
+            newShape = document.createElementNS(svgNS, "polygon");
+            const points = `
+                ${cellX + cellWidth / 2},${cellY}
+                ${cellX},${cellY + cellHeight / 2}
+                ${cellX + cellWidth / 2},${cellY + cellHeight}
+                ${cellX + cellWidth},${cellY + cellHeight / 2}
+            `;
+            newShape.setAttribute("points", points.trim());
+            saveState();
+        } else if (shapeType === "parallelogram") {
+            newShape = document.createElementNS(svgNS, "polygon");
+            const points = `
+                ${cellX + cellWidth / 4},${cellY}
+                ${cellX},${cellY + cellHeight}
+                ${cellX + cellWidth},${cellY + cellHeight}
+                ${cellX + (3 * cellWidth) / 4},${cellY}
+            `;
+            newShape.setAttribute("points", points.trim());
+            saveState();
+        } else if (shapeType === "text") {
+            addText(hoveredCellId);
+            saveState();
+        } else if (shapeType === "image") {
+            uploadPhoto(hoveredCellId);
+            saveState();
+        }
+
+        if (newShape) {
+            newShape.setAttribute("fill", "white");
+            newShape.setAttribute("stroke", "black");
+            newShape.setAttribute("stroke-width", "2");
+            newShape.setAttribute("class", "dropped-shape draggable");
+            newShape.addEventListener("mousedown", startDrag);
+            svg.appendChild(newShape);
+            addResizeHandles(newShape);
+            console.log(`Shape "${shapeType}" placed in cell: ${hoveredCellId}`);
+
+
+        }
+        saveState();
+    }); 
+
+    // Dragging within SVG
+    const startDrag = event => {
+        if (event.target.classList.contains("draggable")) {
+            selectedShape = event.target;
+            const shapeType = selectedShape.tagName;
+            if (shapeType === "circle") {
+                offsetX = event.offsetX - selectedShape.getAttribute("cx");
+                offsetY = event.offsetY - selectedShape.getAttribute("cy");
+            } else if (shapeType === "rect") {
+                offsetX = event.offsetX - selectedShape.getAttribute("x");
+                offsetY = event.offsetY - selectedShape.getAttribute("y");
+            } else if (shapeType === "polygon") {
+                // Add logic for dragging triangles
+                offsetX = 0;
+                offsetY = 0;
+            }
+            saveState();
+            container.addEventListener("mousemove", drag);
+            container.addEventListener("mouseup", endDrag);
+        }
+    };
+
+    const drag = event => {
+        const cellWidth = 10;
+        const cellHeight = 10;
+        if (!selectedShape) return;
+
+        const svgRect = container.querySelector("svg").getBoundingClientRect();
+        const dragX = event.clientX - svgRect.left;
+        const dragY = event.clientY - svgRect.top;
+
+        const snappedX = Math.floor(dragX / cellWidth) * cellWidth;
+        const snappedY = Math.floor(dragY / cellHeight) * cellHeight;
+
+        if (selectedShape.tagName === "circle") {
+            selectedShape.setAttribute("cx", snappedX + cellWidth / 2);
+            selectedShape.setAttribute("cy", snappedY + cellHeight / 2);
+        } else if (selectedShape.tagName === "rect") {
+            selectedShape.setAttribute("x", snappedX);
+            selectedShape.setAttribute("y", snappedY);
+        } else if (selectedShape.tagName === "polygon") {
+            // Adjust triangle points
+            const points = `
+                ${snappedX + cellWidth / 2},${snappedY}
+                ${snappedX},${snappedY + cellHeight}
+                ${snappedX + cellWidth},${snappedY + cellHeight}
+            `;
+            selectedShape.setAttribute("points", points.trim());
+        }
+        saveState();
+        // Update the positions of resize handles if they exist
+        if (selectedShape.resizeHandles) {
+            updateHandles(selectedShape, selectedShape.resizeHandles, 6); // Assuming 6 is the size of the handles
+        }
+    };
+
+    const endDrag = () => {
+        if (selectedShape) {
+            saveState(); // Save the final state after dragging
+        }
+        selectedShape = null;
+        container.removeEventListener("mousemove", drag);
+        container.removeEventListener("mouseup", endDrag);
+    };
+
+    function addResizeHandles(shape) {
+        const resizeHandleSize = 6; // Handle size
+        const svg = shape.ownerSVGElement;
+        const handles = [];
     
+        const positions = [
+            { cursor: "nw-resize" },
+            { cursor: "ne-resize" },
+            { cursor: "sw-resize" },
+            { cursor: "se-resize" },
+        ];
+    
+        positions.forEach((pos) => {
+            const handle = document.createElementNS(svgNS, "rect");
+            handle.setAttribute("width", resizeHandleSize);
+            handle.setAttribute("height", resizeHandleSize);
+            handle.setAttribute("fill", "blue");
+            handle.setAttribute("class", "resize-handle");
+            handle.style.cursor = pos.cursor;
+            handle.style.display = "none"; // Initially hidden
+    
+            handle.addEventListener("mousedown", (event) => startResize(event, shape, pos.cursor, handles));
+            handles.push(handle);
+            svg.appendChild(handle); // Add handles directly to the SVG container
+        });
+    
+        shape.resizeHandles = handles;
+        updateHandles(shape, handles, resizeHandleSize);
+    
+        shape.addEventListener("mouseenter", () => showHandles(handles));
+        shape.addEventListener("mouseleave", () => hideHandles(handles));
+        shape.addEventListener("mousedown", () => showHandles(handles));
+        return handles;
+    }
+    
+
+    // Show handles
+    function showHandles(handles) {
+        handles.forEach((handle) => (handle.style.display = "block"));
+    }
+
+    // Hide handles
+    function hideHandles(handles) {
+        handles.forEach((handle) => (handle.style.display = "none"));
+    }
+
+    // Update function to dynamically position handles
+    function updateHandles(shape, handles, handleSize) {
+        const shapeBBox = shape.getBBox();
+    
+        handles[0].setAttribute("x", shapeBBox.x - handleSize / 2); // Top-left
+        handles[0].setAttribute("y", shapeBBox.y - handleSize / 2);
+    
+        handles[1].setAttribute("x", shapeBBox.x + shapeBBox.width - handleSize / 2); // Top-right
+        handles[1].setAttribute("y", shapeBBox.y - handleSize / 2);
+    
+        handles[2].setAttribute("x", shapeBBox.x - handleSize / 2); // Bottom-left
+        handles[2].setAttribute("y", shapeBBox.y + shapeBBox.height - handleSize / 2);
+    
+        handles[3].setAttribute("x", shapeBBox.x + shapeBBox.width - handleSize / 2); // Bottom-right
+        handles[3].setAttribute("y", shapeBBox.y + shapeBBox.height - handleSize / 2);
+    }
+    
+
+    function startResize(event, shape, cursor, handles) {
+        event.stopPropagation(); // Prevent triggering the shape's drag event
+        event.preventDefault();
+        showHandles(handles);
+    
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const bbox = shape.getBBox();
+    
+        function doResize(event) {
+            let dx = event.clientX - startX;
+            let dy = event.clientY - startY;
+    
+            dx = Math.round(dx / 10) * 10; // Snap resizing
+            dy = Math.round(dy / 10) * 10;
+    
+            if (cursor === "nw-resize") {
+                shape.setAttribute("x", bbox.x + dx);
+                shape.setAttribute("y", bbox.y + dy);
+                shape.setAttribute("width", Math.max(10, bbox.width - dx));
+                shape.setAttribute("height", Math.max(10, bbox.height - dy));
+            } else if (cursor === "ne-resize") {
+                shape.setAttribute("y", bbox.y + dy);
+                shape.setAttribute("width", Math.max(10, bbox.width + dx));
+                shape.setAttribute("height", Math.max(10, bbox.height - dy));
+            } else if (cursor === "sw-resize") {
+                shape.setAttribute("x", bbox.x + dx);
+                shape.setAttribute("width", Math.max(10, bbox.width - dx));
+                shape.setAttribute("height", Math.max(10, bbox.height + dy));
+            } else if (cursor === "se-resize") {
+                shape.setAttribute("width", Math.max(10, bbox.width + dx));
+                shape.setAttribute("height", Math.max(10, bbox.height + dy));
+            }
+    
+            updateHandles(shape, handles, 6);
+        }
+    
+        function stopResize() {
+            document.removeEventListener("mousemove", doResize);
+            document.removeEventListener("mouseup", stopResize);
+            hideHandles(handles);
+        }
+    
+        document.addEventListener("mousemove", doResize);
+        document.addEventListener("mouseup", stopResize);
+    }
+
+    function createCloseButton(targetElement, cellId) {
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "X";
+        closeButton.style.position = "absolute";
+        closeButton.style.display = "none"; // Initially hidden
+        closeButton.style.zIndex = "1000";
+        closeButton.style.cursor = "pointer";
+    
+        // Show the close button on hover
+        targetElement.addEventListener("mouseenter", () => closeButton.style.display = "block");
+        targetElement.addEventListener("mouseleave", () => closeButton.style.display = "none");
+    
+        // Add event listener to close button to delete target element
+        closeButton.addEventListener("click", () => {
+            targetElement.remove();
+            closeButton.remove();
+            elementsMap.delete(cellId);
+        });
+    
+        return closeButton;
+    }
+    
+    function updateElementPosition(targetElement, referenceElement, closeButton) {
+        const rect = referenceElement.getBoundingClientRect();
+        Object.assign(targetElement.style, {
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`
+        });
+    
+        if (closeButton) {
+            closeButton.style.left = `${rect.right - 20}px`;
+            closeButton.style.top = `${rect.top}px`;
+        }
+    }
+    
+    function observeElementChanges(referenceElement, targetElement, closeButton) {
+        const updatePosition = () => updateElementPosition(targetElement, referenceElement, closeButton);
+    
+        const observer = new MutationObserver(updatePosition);
+        observer.observe(referenceElement, { attributes: true });
+    
+        const resizeObserver = new ResizeObserver(updatePosition);
+        resizeObserver.observe(referenceElement);
+    
+        return { observer, resizeObserver };
+    }
+    
+    function addText(cellId) {
+        const cell = document.getElementById(cellId);
+    
+        const textBox = document.createElement("div");
+        Object.assign(textBox, {
+            id: `text_${cellId}`,
+            className: "text-box",
+            contentEditable: "true",
+            placeholder: "Enter text..."
+        });
+        Object.assign(textBox.style, {
+            position: "absolute",
+            border: "1px solid #ccc",
+            padding: "5px",
+            boxSizing: "border-box",
+            background: "white",
+            whiteSpace: "pre-wrap",
+            overflowWrap: "break-word",
+            overflowY: "scroll",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "flex-start"
+        });
+    
+        const closeButton = createCloseButton(textBox, cellId);
+        document.body.appendChild(textBox);
+        document.body.appendChild(closeButton);
+
+        document.querySelectorAll(".toolkit-item").forEach((button) => {
+            button.addEventListener("click", (event) => {
+                const shape = event.currentTarget.getAttribute("data-shape");
+                const textBox = document.querySelector(".text-box"); // Assumes only one active text box at a time
+    
+                if (textBox) {
+                    switch (shape) {
+                        case "alighn-left":
+                            textBox.style.justifyContent = "flex-start";
+    
+                            break;
+                        case "alighn-center":
+                            textBox.style.justifyContent = "center";
+    
+                            break;
+                        case "alighn-right":
+                            textBox.style.justifyContent = "flex-end";
+    
+                            break;
+                    }
+                }
+            });
+        });
+    
+        const { observer, resizeObserver } = observeElementChanges(cell, textBox, closeButton);
+        updateElementPosition(textBox, cell, closeButton);
+    
+        elementsMap.set(cellId, { element: textBox, closeButton, observer, resizeObserver });
+        textBox.focus();
+    }
+    
+    function uploadPhoto(cellId) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+    
+        input.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const cell = document.getElementById(cellId);
+                    const img = document.createElement("img");
+                    Object.assign(img, { src: e.target.result, id: `image_${cellId}` });
+                    Object.assign(img.style, { position: "absolute" });
+    
+                    const closeButton = createCloseButton(img, cellId);
+                    document.body.appendChild(img);
+                    document.body.appendChild(closeButton);
+    
+                    const { observer, resizeObserver } = observeElementChanges(cell, img, closeButton);
+                    updateElementPosition(img, cell, closeButton);
+    
+                    elementsMap.set(cellId, { element: img, closeButton, observer, resizeObserver });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    
+        input.click();
+    }
+    
+    const fontTypes = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
+    const fontSizes = ["12px", "14px", "16px", "18px", "20px", "24px", "30px"];
+    
+    const populateDropdown = (dropdownId, options) => {
+        const dropdown = document.getElementById(dropdownId);
+        options.forEach(optionText => {
+            const option = document.createElement("option");
+            option.value = optionText;
+            option.textContent = optionText;
+            dropdown.appendChild(option);
+        });
+    };
+    
+    populateDropdown("font-type-dropdown", fontTypes);
+    populateDropdown("font-size-dropdown", fontSizes);
+    
+    const applyStyle = (dropdownId, styleProperty) => {
+        document.getElementById(dropdownId).addEventListener("change", (e) => {
+            const textBox = document.querySelector(".text-box");
+            if (textBox) textBox.style[styleProperty] = e.target.value;
+        });
+    };
+    
+    applyStyle("font-type-dropdown", "fontFamily");
+    applyStyle("font-size-dropdown", "fontSize");
 });
 
 
 
+function saveState() {
+    const svgElement = document.getElementById("svg-container").querySelector("svg");
+    const textBox = document.querySelector(".text-box");
+
+    const currentState = {
+        svg: svgElement.outerHTML,
+        textBox: textBox
+            ? {
+                left: textBox.style.left,
+                top: textBox.style.top,
+                width: textBox.style.width,
+                height: textBox.style.height,
+                content: textBox.innerHTML,
+            }
+            : null,
+    };
+
+    history.push(JSON.stringify(currentState));
+    redoStack.length = 0; // Clear redo stack on new action
+}
+
+function undo() {
+    if (history.length > 0) {
+        const previousState = JSON.parse(history.pop());
+        redoStack.push(
+            JSON.stringify({
+                svg: document.getElementById("svg-container").querySelector("svg").outerHTML,
+                textBox: document.querySelector(".text-box")
+                    ? {
+                        left: document.querySelector(".text-box").style.left,
+                        top: document.querySelector(".text-box").style.top,
+                        width: document.querySelector(".text-box").style.width,
+                        height: document.querySelector(".text-box").style.height,
+                        content: document.querySelector(".text-box").innerHTML,
+                    }
+                    : null,
+            })
+        );
+
+        // Restore SVG
+        document.getElementById("svg-container").innerHTML = previousState.svg;
+
+        // Restore Text Box
+        if (previousState.textBox) {
+            const textBox = document.querySelector(".text-box");
+            textBox.style.left = previousState.textBox.left;
+            textBox.style.top = previousState.textBox.top;
+            textBox.style.width = previousState.textBox.width;
+            textBox.style.height = previousState.textBox.height;
+            textBox.innerHTML = previousState.textBox.content;
+        }
+    } else {
+        console.warn("No more actions to undo");
+    }
+}
+
+function redo() {
+    if (redoStack.length > 0) {
+        const nextState = JSON.parse(redoStack.pop());
+        history.push(
+            JSON.stringify({
+                svg: document.getElementById("svg-container").querySelector("svg").outerHTML,
+                textBox: document.querySelector(".text-box")
+                    ? {
+                        left: document.querySelector(".text-box").style.left,
+                        top: document.querySelector(".text-box").style.top,
+                        width: document.querySelector(".text-box").style.width,
+                        height: document.querySelector(".text-box").style.height,
+                        content: document.querySelector(".text-box").innerHTML,
+                    }
+                    : null,
+            })
+        );
+
+        // Restore SVG
+        document.getElementById("svg-container").innerHTML = nextState.svg;
+
+        // Restore Text Box
+        if (nextState.textBox) {
+            const textBox = document.querySelector(".text-box");
+            textBox.style.left = nextState.textBox.left;
+            textBox.style.top = nextState.textBox.top;
+            textBox.style.width = nextState.textBox.width;
+            textBox.style.height = nextState.textBox.height;
+            textBox.innerHTML = nextState.textBox.content;
+        }
+    } else {
+        console.warn("No more actions to redo");
+    }
+}
+
+
+// Add Event Listeners for Ctrl+Z and Ctrl+Y
+document.addEventListener("keydown", function (event) {
+    if (event.ctrlKey && event.key === "z") {
+        event.preventDefault();
+        undo();
+    }
+    if (event.ctrlKey && event.key === "y") {
+        event.preventDefault();
+        redo();
+    }
+});
