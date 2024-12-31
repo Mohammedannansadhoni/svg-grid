@@ -245,28 +245,45 @@ function setCursor(e, rect, rowIndex, rowRects, colIndex, isMerged) {
     const { x, width, y, height } = rect.getBBox();
     const buffer = 10;
 
+    // Detect proximity to the edges of the current cell
     const nearRight = e.clientX >= x + width - buffer && e.clientX <= x + width;
     const nearBottom = e.clientY >= y + height - buffer && e.clientY <= y + height;
-    const nearCorner = nearRight && nearBottom;
+    const nearLeft = e.clientX >= x && e.clientX <= x + buffer;
+    const nearTop = e.clientY >= y && e.clientY <= y + buffer;
 
-    // Handle cursor based on cell type
-    if (isMerged) {
-        // Only show resize cursor if the merged cell can be resized
-        document.body.className = nearCorner ? "nw-resize" :
-            nearRight ? "col-resize" :
-                nearBottom ? "row-resize" : "";
-    } else {
-        // Non-merged cells allow all resizing options
-        document.body.className = nearCorner ? "nw-resize" :
-            nearRight ? "col-resize" :
-                nearBottom ? "row-resize" : "";
+    // Prevent overlap with adjacent cells
+    const isInsideCell = e.clientX >= x && e.clientX <= x + width && e.clientY >= y && e.clientY <= y + height;
+
+    if (!isInsideCell) {
+        document.body.className = ""; // Default cursor if not inside the cell
+        return;
     }
 
-    // Default cursor if no conditions match
-    if (!nearCorner && !nearRight && !nearBottom) {
-        document.body.className = "";
+    // Handle cursor based on proximity to edges
+    const nearCorner = nearRight && nearBottom;
+    if (isMerged) {
+        document.body.className = nearCorner
+            ? "nw-resize"
+            : nearRight
+            ? "col-resize"
+            : nearBottom
+            ? "row-resize"
+            : "";
+    } else {
+        document.body.className = nearCorner
+            ? "nw-resize"
+            : nearRight
+            ? "col-resize"
+            : nearBottom
+            ? "row-resize"
+            : "";
+    }
+
+    if (!nearCorner && !nearRight && !nearBottom && !nearLeft && !nearTop) {
+        document.body.className = ""; // Default cursor if no conditions match
     }
 }
+
 
 
 function handleMouseDown(e, rect, rowRects, rowIndex, colIndex) {
