@@ -242,49 +242,47 @@ function getColumnCells(mergedCell, rowRects) {
 }
 
 function setCursor(e, rect, rowIndex, rowRects, colIndex, isMerged) {
-    const { x, width, y, height } = rect.getBBox();
-    const buffer = 10;
+    const svg = rect.ownerSVGElement;
+    const point = svg.createSVGPoint();
+    point.x = e.clientX;
+    point.y = e.clientY;
 
-    // Detect proximity to the edges of the current cell
-    const nearRight = e.clientX >= x + width - buffer && e.clientX <= x + width;
-    const nearBottom = e.clientY >= y + height - buffer && e.clientY <= y + height;
-    const nearLeft = e.clientX >= x && e.clientX <= x + buffer;
-    const nearTop = e.clientY >= y && e.clientY <= y + buffer;
+    const cursorPoint = point.matrixTransform(svg.getScreenCTM().inverse());
+    const { x, y, width, height } = rect.getBBox();
+    const computedStyle = window.getComputedStyle(rect);
+    const strokeWidth = parseFloat(computedStyle.strokeWidth) || 1; // Default stroke width
+    const buffer = 1; // Buffer for detecting proximity to edges
 
-    // Prevent overlap with adjacent cells
-    const isInsideCell = e.clientX >= x && e.clientX <= x + width && e.clientY >= y && e.clientY <= y + height;
+    // Adjust bounds for stroke
+    const leftEdge = x - strokeWidth / 2;
+    const rightEdge = x + width + strokeWidth / 2;
+    const topEdge = y - strokeWidth / 2;
+    const bottomEdge = y + height + strokeWidth / 2;
+
+    const nearRight = cursorPoint.x >= rightEdge - buffer && cursorPoint.x <= rightEdge + buffer;
+    const nearBottom = cursorPoint.y >= bottomEdge - buffer && cursorPoint.y <= bottomEdge + buffer;
+    const nearLeft = cursorPoint.x >= leftEdge - buffer && cursorPoint.x <= leftEdge + buffer;
+    const nearTop = cursorPoint.y >= topEdge - buffer && cursorPoint.y <= topEdge + buffer;
+
+    const nearCorner = (nearRight && nearBottom) || (nearLeft && nearTop);
+
+     const isInsideCell = e.clientX >= x && e.clientX <= x + width && e.clientY >= y && e.clientY <= y + height;
 
     if (!isInsideCell) {
-        document.body.className = ""; // Default cursor if not inside the cell
+        document.body.className = ""; // Reset cursor when outside
         return;
     }
+    // Determine the cursor style
+    const cursorStyle = nearCorner
+        ? "nw-resize"
+        : nearRight || nearLeft
+        ? "col-resize"
+        : nearTop || nearBottom
+        ? "row-resize"
+        : "";
 
-    // Handle cursor based on proximity to edges
-    const nearCorner = nearRight && nearBottom;
-    if (isMerged) {
-        document.body.className = nearCorner
-            ? "nw-resize"
-            : nearRight
-            ? "col-resize"
-            : nearBottom
-            ? "row-resize"
-            : "";
-    } else {
-        document.body.className = nearCorner
-            ? "nw-resize"
-            : nearRight
-            ? "col-resize"
-            : nearBottom
-            ? "row-resize"
-            : "";
-    }
-
-    if (!nearCorner && !nearRight && !nearBottom && !nearLeft && !nearTop) {
-        document.body.className = ""; // Default cursor if no conditions match
-    }
+    document.body.className = cursorStyle || ""; // Set the cursor
 }
-
-
 
 function handleMouseDown(e, rect, rowRects, rowIndex, colIndex) {
     const { clientX: startX, clientY: startY } = e;
