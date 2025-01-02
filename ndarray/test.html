@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <style>
+        svg {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+          }
+          #dropZone {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 100px;
+            height: 100px;
+            border: 1px solid black;
+          }
+          #dropZone.dropped {
+            background: red;
+          }
+    </style>
+</head>
+<body>
+    <svg viewBox="0 0 10 10" width="100" height="100" id="mySVG">
+        <rect x="1" y="1" width="8" height="8" fill="green" />
+      </svg>
+      <div id="dropZone"></div>
+    <script>
+        
+        var SVG = document.getElementById('mySVG');
+        var Zone = document.getElementById('dropZone')
+        
+        // We will store some global mouse info here, to calculate differences
+        var mouse = {x:0, y:0, down: false}
+        
+        // This function will return true or false depending on whether the 'zone' and 'what' overlap
+        // http://stackoverflow.com/questions/12066870/how-to-check-if-an-element-is-overlapping-other-elements
+        function inDropZone(what, zone){
+          zone = zone.getBoundingClientRect();
+          what = what.getBoundingClientRect();
+          return !(
+            zone.right < what.left || 
+            zone.left > what.right || 
+            zone.bottom < what.top || 
+            zone.top > what.bottom
+          );
+        }
+        
+        // This will set the drag to true so the mousemove can do its thing.
+        SVG.addEventListener('mousedown', function(e){
+          mouse.down = true;
+        });
+        
+        // This will only move the svg if mouse.down is true
+        document.addEventListener('mousemove', function(e){
+          if(mouse.down){
+            // Because the current position is stored as a String, we will use parseInt.
+            // But since the SVG can also have an empty position value, we need to make sure
+            // we output a number, so if parseInt fails, we use the value `0`
+            SVG.style.left = (parseInt(SVG.style.left, 10) || 0) + e.pageX - mouse.x + 'px';
+            SVG.style.top = (parseInt(SVG.style.top, 10) || 0) + e.pageY - mouse.y + 'px';
+          }
+          // This will continually reset the mouse position so we can drop and restart dragging at any time
+          mouse.x = e.pageX;
+          mouse.y = e.pageY;
+        });
+        
+        // This will deactivate the mousedown and mark the drozone when the element is released.
+        document.addEventListener('mouseup', function(e){
+          mouse.down = false;
+          Zone.className = inDropZone(SVG, Zone) ? 'dropped' : '';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+{
+  "campaign": {
+    "TABLE_NAME": "campaign",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "campaign_audience",
+        "referencingTables": [],
+        "COLUMN_NAME": "campaign_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "campaign_template_data",
+        "referencingTables": [],
+        "COLUMN_NAME": "campaign_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "outgoing_message",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "outgoing_message_status",
+            "referencingTables": [
+              {
+                "TABLE_NAME": "outgoing_message_status_conversation",
+                "referencingTables": [],
+                "COLUMN_NAME": "outgoing_message_status_id",
+                "REFERENCED_COLUMN_NAME": "id"
+              },
+              {
+                "TABLE_NAME": "outgoing_message_status_error",
+                "referencingTables": [],
+                "COLUMN_NAME": "outgoing_message_status_id",
+                "REFERENCED_COLUMN_NAME": "id"
+              },
+              {
+                "TABLE_NAME": "outgoing_message_status_pricing",
+                "referencingTables": [],
+                "COLUMN_NAME": "outgoing_message_status_id",
+                "REFERENCED_COLUMN_NAME": "id"
+              }
+            ],
+            "COLUMN_NAME": "outgoing_message_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "campaign_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "campaign_audience": {
+    "TABLE_NAME": "campaign_audience",
+    "referencingTables": []
+  },
+  "campaign_template_data": {
+    "TABLE_NAME": "campaign_template_data",
+    "referencingTables": []
+  },
+  "outgoing_message": {
+    "TABLE_NAME": "outgoing_message",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "outgoing_message_status",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "outgoing_message_status_conversation",
+            "referencingTables": [],
+            "COLUMN_NAME": "outgoing_message_status_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          },
+          {
+            "TABLE_NAME": "outgoing_message_status_error",
+            "referencingTables": [],
+            "COLUMN_NAME": "outgoing_message_status_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          },
+          {
+            "TABLE_NAME": "outgoing_message_status_pricing",
+            "referencingTables": [],
+            "COLUMN_NAME": "outgoing_message_status_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "outgoing_message_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "outgoing_message_status": {
+    "TABLE_NAME": "outgoing_message_status",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "outgoing_message_status_conversation",
+        "referencingTables": [],
+        "COLUMN_NAME": "outgoing_message_status_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "outgoing_message_status_error",
+        "referencingTables": [],
+        "COLUMN_NAME": "outgoing_message_status_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "outgoing_message_status_pricing",
+        "referencingTables": [],
+        "COLUMN_NAME": "outgoing_message_status_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "outgoing_message_status_conversation": {
+    "TABLE_NAME": "outgoing_message_status_conversation",
+    "referencingTables": []
+  },
+  "outgoing_message_status_error": {
+    "TABLE_NAME": "outgoing_message_status_error",
+    "referencingTables": []
+  },
+  "outgoing_message_status_pricing": {
+    "TABLE_NAME": "outgoing_message_status_pricing",
+    "referencingTables": []
+  },
+  "tab_l1": {
+    "TABLE_NAME": "tab_l1",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "tab_l2",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "tab_l3",
+            "referencingTables": [],
+            "COLUMN_NAME": "tab_l2_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "tab_l1_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "tab_l2": {
+    "TABLE_NAME": "tab_l2",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "tab_l3",
+        "referencingTables": [],
+        "COLUMN_NAME": "tab_l2_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "tab_l3": {
+    "TABLE_NAME": "tab_l3",
+    "referencingTables": []
+  },
+  "wa_contact_library": {
+    "TABLE_NAME": "wa_contact_library",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "wa_contact_library_address",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_contact_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_contact_library_email",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_contact_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_contact_library_phone",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_contact_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_contact_library_url",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_contact_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_button_action",
+        "referencingTables": [],
+        "COLUMN_NAME": "contact_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "wa_contact_library_address": {
+    "TABLE_NAME": "wa_contact_library_address",
+    "referencingTables": []
+  },
+  "wa_contact_library_email": {
+    "TABLE_NAME": "wa_contact_library_email",
+    "referencingTables": []
+  },
+  "wa_contact_library_phone": {
+    "TABLE_NAME": "wa_contact_library_phone",
+    "referencingTables": []
+  },
+  "wa_contact_library_url": {
+    "TABLE_NAME": "wa_contact_library_url",
+    "referencingTables": []
+  },
+  "wa_location_library": {
+    "TABLE_NAME": "wa_location_library",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "wa_template_button_action",
+        "referencingTables": [],
+        "COLUMN_NAME": "location_library_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "wa_template": {
+    "TABLE_NAME": "wa_template",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "campaign",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "campaign_audience",
+            "referencingTables": [],
+            "COLUMN_NAME": "campaign_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          },
+          {
+            "TABLE_NAME": "campaign_template_data",
+            "referencingTables": [],
+            "COLUMN_NAME": "campaign_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          },
+          {
+            "TABLE_NAME": "outgoing_message",
+            "referencingTables": [
+              {
+                "TABLE_NAME": "outgoing_message_status",
+                "referencingTables": [
+                  {
+                    "TABLE_NAME": "outgoing_message_status_conversation",
+                    "referencingTables": [],
+                    "COLUMN_NAME": "outgoing_message_status_id",
+                    "REFERENCED_COLUMN_NAME": "id"
+                  },
+                  {
+                    "TABLE_NAME": "outgoing_message_status_error",
+                    "referencingTables": [],
+                    "COLUMN_NAME": "outgoing_message_status_id",
+                    "REFERENCED_COLUMN_NAME": "id"
+                  },
+                  {
+                    "TABLE_NAME": "outgoing_message_status_pricing",
+                    "referencingTables": [],
+                    "COLUMN_NAME": "outgoing_message_status_id",
+                    "REFERENCED_COLUMN_NAME": "id"
+                  }
+                ],
+                "COLUMN_NAME": "outgoing_message_id",
+                "REFERENCED_COLUMN_NAME": "id"
+              }
+            ],
+            "COLUMN_NAME": "campaign_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "wa_template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_body",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "wa_template_body_variable",
+            "referencingTables": [],
+            "COLUMN_NAME": "wa_template_body_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "wa_template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_button",
+        "referencingTables": [
+          {
+            "TABLE_NAME": "wa_template_button_action",
+            "referencingTables": [],
+            "COLUMN_NAME": "wa_template_button_id",
+            "REFERENCED_COLUMN_NAME": "id"
+          }
+        ],
+        "COLUMN_NAME": "wa_template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_button_action",
+        "referencingTables": [],
+        "COLUMN_NAME": "template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_footer",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      },
+      {
+        "TABLE_NAME": "wa_template_header",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_template_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "wa_template_body": {
+    "TABLE_NAME": "wa_template_body",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "wa_template_body_variable",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_template_body_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "wa_template_body_variable": {
+    "TABLE_NAME": "wa_template_body_variable",
+    "referencingTables": []
+  },
+  "wa_template_button": {
+    "TABLE_NAME": "wa_template_button",
+    "referencingTables": [
+      {
+        "TABLE_NAME": "wa_template_button_action",
+        "referencingTables": [],
+        "COLUMN_NAME": "wa_template_button_id",
+        "REFERENCED_COLUMN_NAME": "id"
+      }
+    ]
+  },
+  "wa_template_button_action": {
+    "TABLE_NAME": "wa_template_button_action",
+    "referencingTables": []
+  },
+  "wa_template_footer": {
+    "TABLE_NAME": "wa_template_footer",
+    "referencingTables": []
+  },
+  "wa_template_header": {
+    "TABLE_NAME": "wa_template_header",
+    "referencingTables": []
+  }
+}

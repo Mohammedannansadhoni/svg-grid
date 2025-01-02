@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      .svg-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      svg {
+        font-size: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="position: relative; height: 100vh">
+      <div
+        style="
+          position: relative;
+          display: grid;
+          grid-template-columns: repeat(192, 1px);
+        "
+        id="main_content"
+      ></div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        // Function to adjust SVG sizes and positions
+        function adjustSVG() {
+          // Get the new screen dimensions
+          var screenWidth = window.innerWidth;
+          var screenHeight = window.innerHeight;
+        }
+
+        $.ajax({
+          url: "http://localhost:5001/api/svg/rect",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ screenWidth: 192, screenHeight: 192 }),
+          success: function (response) {
+            console.log(response);
+            let obj = response.data;
+            for (let key in obj) {
+              if (obj[key] > 0) {
+                $("#main_content").append(
+                  '<div style="height: 1px; background-color: #d2d2d2;"><p style="font-size: 1px;text-align:center;">' +
+                    obj[key] +
+                    "</p></div>"
+                );
+              } else {
+                $("#main_content").append(
+                  '<div style="height: 1px;"><p style="font-size: 1px;text-align:center;">' +
+                    obj[key] +
+                    "</p></div>"
+                );
+              }
+            }
+            $.ajax({
+              url: "http://localhost:5001/schema",
+              type: "GET",
+              contentType: "application/json",
+              success: function (response) {
+                console.log(response);
+
+                const tableNames = Object.keys(response).map(
+                  (key) => response[key].TABLE_NAME
+                );
+                console.log(tableNames);
+
+                const tableName1 = tableNames[0] || "Table 1";
+                const tableName2 = tableNames[1] || "Table 2";
+                const tableName3 = tableNames[2] || "Table 3";
+                console.log(tableNames[0]);
+
+                var svg = d3
+                  .select("#main_content")
+                  .append("svg")
+                  .attr("width", 192)
+                  .attr("height", 192)
+                  .attr("id", "svg1")
+                  .style("position", "absolute")
+                  .style("top", "0")
+                  .style("left", "0")
+                  .style("right", "0")
+                  .style("bottom", "0");
+
+                // Append the rectangles to the SVG
+                var rect1 = svg
+                  .append("rect")
+                  .attr("id", "rectangle1")
+                  .attr("x", 20)
+                  .attr("y", 20)
+                  .attr("rx", 0.3)
+                  .attr("ry", 0.3)
+                  .attr("width", 13)
+                  .attr("height", 10)
+                  .attr("fill", "white")
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1px")
+                  .on("mouseover", function () {
+                    // showAddButtons(d3.select(this));
+                    d3.selectAll(
+                      "#circle1, #circle2, #circle3, #circle4, #circle5, #circle6, #circle7, #circle8, #circle9, #circle10"
+                    )
+                      .transition()
+                      .style("opacity", 1);
+                  })
+                  .on("mouseout", function () {
+                    // hideAddButtons();
+                    d3.selectAll(
+                      "#circle1, #circle2, #circle3, #circle4, #circle5, #circle6, #circle7, #circle8, #circle9, #circle10"
+                    )
+                      .transition()
+                      .style("opacity", 0);
+                  });
+
+                //               function showAddButtons(rect) {
+                //   var x = +rect.attr("x");
+                //   var y = +rect.attr("y");
+                //   var width = +rect.attr("width");
+                //   var height = +rect.attr("height");
+
+                //   // Add buttons at the sides and bottom
+                //   var buttons = [
+                //     { id: "addRight", cx: x + width + 10, cy: y + height / 2 }, // Right
+                //     { id: "addLeft", cx: x - 10, cy: y + height / 2 }, // Left
+                //     { id: "addBottom", cx: x + width / 2, cy: y + height + 10 } // Bottom
+                //   ];
+
+                //   buttons.forEach(function (button) {
+                //     svg.append("circle")
+                //       .attr("id", button.id)
+                //       .attr("cx", button.cx)
+                //       .attr("cy", button.cy)
+                //       .attr("r", 1)
+                //       .attr("fill", "green")
+                //       .style("cursor", "pointer")
+                //       .on("click", function () {
+                //         addRectangle(button.id, rect);
+                //       });
+                //   });
+                // }
+
+                // function hideAddButtons() {
+                //   d3.selectAll("#addRight, #addLeft, #addBottom").remove();
+                // }
+
+                // function addRectangle(buttonId, rect) {
+                //   var x = +rect.attr("x");
+                //   var y = +rect.attr("y");
+                //   var width = +rect.attr("width");
+                //   var height = +rect.attr("height");
+                //   var newRect;
+
+                //   switch (buttonId) {
+                //     case "addRight":
+                //       newRect = svg.append("rect")
+                //         .attr("x", x + width + 20)
+                //         .attr("y", y)
+                //         .attr("width", width)
+                //         .attr("height", height)
+                //         .attr("fill", "white")
+                //         .style("stroke", "black")
+                //         .style("stroke-width", "0.1px");
+                //       break;
+                //     case "addLeft":
+                //       newRect = svg.append("rect")
+                //         .attr("x", x - width - 20)
+                //         .attr("y", y)
+                //         .attr("width", width)
+                //         .attr("height", height)
+                //         .attr("fill", "white")
+                //         .style("stroke", "black")
+                //         .style("stroke-width", "0.1px");
+                //       break;
+                //     case "addBottom":
+                //       newRect = svg.append("rect")
+                //         .attr("x", x)
+                //         .attr("y", y + height + 20)
+                //         .attr("width", width)
+                //         .attr("height", height)
+                //         .attr("fill", "white")
+                //         .style("stroke", "black")
+                //         .style("stroke-width", "0.1px");
+                //       break;
+                //   }
+
+                //   // Add hover effect to the new rectangle
+                //   newRect.on("mouseover", function () {
+                //     showAddButtons(d3.select(this));
+                //   }).on("mouseout", function () {
+                //     hideAddButtons();
+                //   });
+                // }
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle1")
+                  .attr("cx", 33)
+                  .attr("cy", 22.8)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle6")
+                  .attr("cx", 20) // This sets the x-coordinate to 20
+                  .attr("cy", 22.8) // This sets the y-coordinate to 22.8
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                // Append the text element for "Campaign"
+                svg
+                  .append("text")
+                  .attr("id", "text1")
+                  .attr("class", "heading")
+                  .attr("x", 20)
+                  .attr("y", 21.2)
+                  .style("font-weight", "bold")
+                  .html(function () {
+                    return (
+                      '<tspan font-family="FontAwesome" font-size="1">&#128202;</tspan> <tspan>' +
+                      tableName1 +
+                      "</tspan>"
+                    );
+                  });
+
+                // Append text element for the menu icon
+                svg
+                  .append("text")
+                  .attr("id", "menuIcon")
+                  .attr("x", 31)
+                  .attr("y", 21.5)
+                  .style("font-family", "FontAwesome")
+                  .style("font-size", "1.5em")
+                  .text("\u2630")
+                  .on("click", function (event) {
+                    var coords = d3.pointer(event); // Get the mouse coordinates
+                    toggleMenu(coords); // Pass the coordinates to the toggleMenu function
+                  })
+                  .on("mouseover", function () {
+                    d3.select(this).style("cursor", "pointer");
+                  });
+
+                // Function to toggle the menu
+                function toggleMenu(coords) {
+                  var menuRect = svg.select("#menuRect");
+                  if (menuRect.empty()) {
+                    // If menu rectangle doesn't exist, create it
+                    menuRect = svg
+                      .append("rect")
+                      .attr("id", "menuRect")
+                      .attr("x", coords[0]) // Use the dynamic x-coordinate
+                      .attr("y", coords[1]) // Use the dynamic y-coordinate
+                      .attr("width", 20)
+                      .attr("height", 20)
+                      .attr("fill", "lightgray")
+                      .style("stroke", "black");
+
+                    svg
+                      .append("text")
+                      .attr("id", "menuText")
+                      .attr("x", coords[0] + 5) // Adjust the x position to be inside the rectangle
+                      .attr("y", coords[1] + 20) // Adjust the y position to be inside the rectangle
+                      .text("Filename");
+                  } else {
+                    // If menu rectangle exists, remove it
+                    menuRect.remove();
+                    svg.select("#menuText").remove();
+                  }
+                }
+
+                svg
+                  .append("line")
+                  .attr("id", "line1")
+                  .attr("x1", 20)
+                  .attr("y1", 22)
+                  .attr("x2", 33)
+                  .attr("y2", 22)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text2")
+                  .attr("x", 20)
+                  .attr("y", 23)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4C4}</tspan> <tspan>filename: example.jpg</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line2")
+                  .attr("x1", 20)
+                  .attr("y1", 23.5)
+                  .attr("x2", 33)
+                  .attr("y2", 23.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle2")
+                  .attr("cx", 33)
+                  .attr("cy", 24.4)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle7")
+                  .attr("cx", 20) // This sets the x-coordinate to 20
+                  .attr("cy", 24.4) // This sets the y-coordinate to 22.8
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                // Assuming the SVG element has already been created and is referenced by the variable 'svg'
+                svg
+                  .append("text")
+                  .attr("id", "text3")
+                  .attr("x", 20)
+                  .attr("y", 24.6)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">&#128273;</tspan> <tspan>id: 123</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line3")
+                  .attr("x1", 20)
+                  .attr("y1", 25)
+                  .attr("x2", 33)
+                  .attr("y2", 25)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text4")
+                  .attr("x", 20)
+                  .attr("y", 26)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4D1}</tspan> <tspan>fieldType: image</tspan>';
+                  });
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle3")
+                  .attr("cx", 33)
+                  .attr("cy", 25.9)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle8")
+                  .attr("cx", 20) // This sets the x-coordinate to 20
+                  .attr("cy", 25.9) // This sets the y-coordinate to 22.8
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                svg
+                  .append("line")
+                  .attr("id", "line4")
+                  .attr("x1", 20)
+                  .attr("y1", 26.5)
+                  .attr("x2", 33)
+                  .attr("y2", 26.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text5")
+                  .attr("x", 20.5)
+                  .attr("y", 27.5)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome"  font-size="1">\u{25C6}</tspan> <tspan>width: -14</tspan>';
+                  });
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle4")
+                  .attr("cx", 33)
+                  .attr("cy", 27.5)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle9")
+                  .attr("cx", 20) // This sets the x-coordinate to 20
+                  .attr("cy", 27.5) // This sets the y-coordinate to 22.8
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                svg
+                  .append("line")
+                  .attr("id", "line5")
+                  .attr("x1", 20)
+                  .attr("y1", 28)
+                  .attr("x2", 33)
+                  .attr("y2", 28)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text6")
+                  .attr("x", 20.5)
+                  .attr("y", 29)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{25C6}</tspan> <tspan>height: -14</tspan>';
+                  });
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle5")
+                  .attr("cx", 33)
+                  .attr("cy", 29)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle10")
+                  .attr("cx", 20) // This sets the x-coordinate to 20
+                  .attr("cy", 29) // This sets the y-coordinate to 22.8
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0); // Start with circle invisible
+
+                var rect2 = svg
+                  .append("rect")
+                  .attr("id", "rectangle2")
+                  .attr("x", 50)
+                  .attr("y", 20)
+                  .attr("rx", 0.3)
+                  .attr("ry", 0.3)
+                  .attr("width", 13)
+                  .attr("height", 10)
+                  .attr("fill", "white")
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1px")
+                  .on("mouseover", function () {
+                    d3.selectAll(
+                      "#circle11,#circle12,#circle13,#circle14,#circle15,#circle16,#circle17,#circle18,#circle19,#circle20"
+                    )
+                      .transition()
+                      .style("opacity", 1);
+                  })
+                  .on("mouseout", function () {
+                    d3.selectAll(
+                      "#circle11,#circle12,#circle13,#circle14,#circle15,#circle16,#circle17,#circle18,#circle19,#circle20"
+                    )
+                      .transition()
+                      .style("opacity", 0);
+                  });
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle11")
+                  .attr("cx", 50)
+                  .attr("cy", 22.8)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle16")
+                  .attr("cx", 63)
+                  .attr("cy", 22.8)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text7")
+                  .attr("class", "heading")
+                  .attr("x", 50)
+                  .attr("y", 21.2)
+                  .style("font-weight", "bold")
+                  .html(function () {
+                    return (
+                      '<tspan font-family="FontAwesome" font-size="1">&#128202;</tspan> <tspan>' +
+                      tableName2 +
+                      "</tspan>"
+                    );
+                  });
+                svg
+                  .append("line")
+                  .attr("id", "line6")
+                  .attr("x1", 50)
+                  .attr("y1", 22)
+                  .attr("x2", 63)
+                  .attr("y2", 22)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text8")
+                  .attr("x", 50)
+                  .attr("y", 23)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4C4}</tspan> <tspan>filename: example.jpg</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line7")
+                  .attr("x1", 50)
+                  .attr("y1", 23.5)
+                  .attr("x2", 63)
+                  .attr("y2", 23.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle12")
+                  .attr("cx", 50)
+                  .attr("cy", 24.4)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle17")
+                  .attr("cx", 63)
+                  .attr("cy", 24.4)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text9")
+                  .attr("x", 50)
+                  .attr("y", 24.6)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">&#128273;</tspan> <tspan>id: 123</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line8")
+                  .attr("x1", 50)
+                  .attr("y1", 25)
+                  .attr("x2", 63)
+                  .attr("y2", 25)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle13")
+                  .attr("cx", 50)
+                  .attr("cy", 25.9)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle18")
+                  .attr("cx", 63)
+                  .attr("cy", 25.9)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text10")
+                  .attr("x", 50)
+                  .attr("y", 26)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4D1}</tspan> <tspan>fieldType: image</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line9")
+                  .attr("x1", 50)
+                  .attr("y1", 26.5)
+                  .attr("x2", 63)
+                  .attr("y2", 26.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle14")
+                  .attr("cx", 50)
+                  .attr("cy", 27.5)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle19")
+                  .attr("cx", 63)
+                  .attr("cy", 27.5)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text11")
+                  .attr("x", 50.5)
+                  .attr("y", 27.5)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome"  font-size="1">\u{25C6}</tspan> <tspan>width: -14</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line10")
+                  .attr("x1", 50)
+                  .attr("y1", 28)
+                  .attr("x2", 63)
+                  .attr("y2", 28)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle15")
+                  .attr("cx", 50)
+                  .attr("cy", 29)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle20")
+                  .attr("cx", 63)
+                  .attr("cy", 29)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text12")
+                  .attr("x", 50.5)
+                  .attr("y", 29)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome"  font-size="1">\u{25C6}</tspan> <tspan>height: -14</tspan>';
+                  });
+
+                var rect3 = svg
+                  .append("rect")
+                  .attr("id", "rectangle3 ")
+                  .attr("x", 80)
+                  .attr("y", 20)
+                  .attr("rx", 0.3)
+                  .attr("ry", 0.3)
+                  .attr("width", 13)
+                  .attr("height", 10)
+                  .attr("fill", "white")
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1px")
+                  .on("mouseover", function () {
+                    d3.selectAll(
+                      "#circle21, #circle22, #circle23, #circle24, #circle25, #circle26, #circle27, #circle28, #circle29, #circle30"
+                    )
+                      .transition()
+                      .style("opacity", 1);
+                  })
+                  .on("mouseout", function () {
+                    d3.selectAll(
+                      "#circle21, #circle22, #circle23, #circle24, #circle25, #circle26, #circle27, #circle28, #circle29, #circle30"
+                    )
+                      .transition()
+                      .style("opacity", 0);
+                  });
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle21")
+                  .attr("cx", 80)
+                  .attr("cy", 22.8)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle26")
+                  .attr("cx", 93)
+                  .attr("cy", 22.8)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text13")
+                  .attr("class", "heading")
+                  .attr("x", 80)
+                  .attr("y", 21.2)
+                  .style("font-weight", "bold")
+                  .html(function () {
+                    return (
+                      '<tspan font-family="FontAwesome" font-size="1">&#128202;</tspan> <tspan>' +
+                      tableName3 +
+                      "</tspan>"
+                    );
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line11")
+                  .attr("x1", 80)
+                  .attr("y1", 22)
+                  .attr("x2", 93)
+                  .attr("y2", 22)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("text")
+                  .attr("id", "text14")
+                  .attr("x", 80)
+                  .attr("y", 23)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4C4}</tspan> <tspan>filename: example.jpg</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line12")
+                  .attr("x1", 80)
+                  .attr("y1", 23.5)
+                  .attr("x2", 93)
+                  .attr("y2", 23.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle22")
+                  .attr("cx", 80)
+                  .attr("cy", 24.4)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle27")
+                  .attr("cx", 93)
+                  .attr("cy", 24.4)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text15")
+                  .attr("x", 80)
+                  .attr("y", 24.6)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">&#128273;</tspan> <tspan>id: 123</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line13")
+                  .attr("x1", 80)
+                  .attr("y1", 25)
+                  .attr("x2", 93)
+                  .attr("y2", 25)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle23")
+                  .attr("cx", 80)
+                  .attr("cy", 25.9)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle28")
+                  .attr("cx", 93)
+                  .attr("cy", 25.9)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text16")
+                  .attr("x", 80)
+                  .attr("y", 26)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome" font-size="1">\u{1F4D1}</tspan> <tspan>fieldType: image</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line14")
+                  .attr("x1", 80)
+                  .attr("y1", 26.5)
+                  .attr("x2", 93)
+                  .attr("y2", 26.5)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle24")
+                  .attr("cx", 80)
+                  .attr("cy", 27.5)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle29")
+                  .attr("cx", 93)
+                  .attr("cy", 27.5)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text17")
+                  .attr("x", 80.5)
+                  .attr("y", 27.5)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome"  font-size="1">\u{25C6}</tspan> <tspan>width: -14</tspan>';
+                  });
+
+                svg
+                  .append("line")
+                  .attr("id", "line15")
+                  .attr("x1", 80)
+                  .attr("y1", 28)
+                  .attr("x2", 93)
+                  .attr("y2", 28)
+                  .style("stroke", "black")
+                  .style("stroke-width", "0.1");
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle25")
+                  .attr("cx", 80)
+                  .attr("cy", 29)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("circle")
+                  .attr("id", "circle30")
+                  .attr("cx", 93)
+                  .attr("cy", 29)
+                  .attr("r", 0.2)
+                  .attr("fill", "black")
+                  .style("opacity", 0);
+
+                svg
+                  .append("text")
+                  .attr("id", "text18")
+                  .attr("x", 80.5)
+                  .attr("y", 29)
+                  .html(function () {
+                    // Unicode character for the digital key icon (example: &#128273; for a padlock)
+                    // You can replace &#128273; with the appropriate glyph icon character
+                    return '<tspan font-family="FontAwesome"  font-size="1">\u{25C6}</tspan> <tspan>width: -14</tspan>';
+                  });
+
+                // Function to create a line
+                function createLine(x1, y1, x2, y2) {
+                  var line = svg
+                    .append("line")
+                    .attr("x1", x1)
+                    .attr("y1", y1)
+                    .attr("x2", x2)
+                    .attr("y2", y2)
+                    .style("stroke", "black")
+                    .style("stroke-width", "0.1px")
+                    .on("mouseover", function () {
+                      // Append an "x" icon when hovering over the line
+                      var iconX = (x1 + x2) / 2;
+                      var iconY = (y1 + y2) / 2;
+                      var deltaX = (x2 - x1) / 4; // Adjusting x position to be exactly in the middle
+                      var deltaY = (y2 - y1) / 4;
+                      var xIcon = svg
+                        .append("text")
+                        .attr("class", "x-icon")
+                        .attr("x", iconX + deltaX)
+                        .attr("y", iconY + deltaY)
+                        .attr("text-anchor", "middle")
+                        .attr("alignment-baseline", "middle")
+                        .text("x")
+                        .style("font-size", "1px")
+                        .style("fill", "red")
+                        .style("cursor", "pointer")
+                        .on("click", function () {
+                          line.remove(); // Remove the line when "x" icon is clicked
+                          d3.selectAll(".x-icon").remove(); // Remove the "x" icon
+                        });
+
+                      // Store a reference to the "x" icon for later use
+                      line.xIcon = xIcon;
+                    });
+
+                  return line;
+                }
+
+                // Function to update the line position
+                function updateLinePosition(line, startX, startY, endX, endY) {
+                  line
+                    .attr("x1", startX)
+                    .attr("y1", startY)
+                    .attr("x2", endX)
+                    .attr("y2", endY);
+
+                  // If the line has an associated "x" icon, update its position too
+                  if (line.xIcon) {
+                    var iconX = (startX + endX) / 2;
+                    var iconY = (startY + endY) / 2;
+                    var deltaX = (endX - startX) / 4;
+                    var deltaY = (endY - startY) / 4;
+                    line.xIcon
+                      .attr("x", iconX + deltaX)
+                      .attr("y", iconY + deltaY);
+                  }
+                }
+
+                // Function to find the closest circle to a given point
+                function findClosestCircle(x, y, circleIds) {
+                  var minDistance = Infinity;
+                  var closestCircle = null;
+                  circleIds.forEach(function (id) {
+                    var circle = svg.select("#" + id);
+                    var cx = +circle.attr("cx");
+                    var cy = +circle.attr("cy");
+                    var distance = Math.sqrt(
+                      Math.pow(cx - x, 2) + Math.pow(cy - y, 2)
+                    );
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      closestCircle = circle;
+                    }
+                  });
+                  return closestCircle;
+                }
+
+                // Function to update line positions when any circle is moved
+                function updateLineOnCircleMove() {
+                  var lines = svg.selectAll("line");
+                  lines.each(function () {
+                    var currentLine = d3.select(this);
+                    var startCircleId = currentLine.attr("startCircle");
+                    var endCircleId = currentLine.attr("endCircle");
+
+                    var startCircle = svg.select("#" + startCircleId);
+                    var endCircle = svg.select("#" + endCircleId);
+
+                    updateLinePosition(
+                      currentLine,
+                      +startCircle.attr("cx"),
+                      +startCircle.attr("cy"),
+                      +endCircle.attr("cx"),
+                      +endCircle.attr("cy")
+                    );
+                  });
+                }
+
+                // Function to enable line drawing between circles
+                function enableLineDrawing(circleIds) {
+                  var svg = d3.select("svg"); // Assuming you have an SVG element in your HTML
+
+                  var isDrawing = false;
+                  var startX, startY, startCircle;
+                  var line;
+
+                  circleIds.forEach(function (id) {
+                    var circle = svg.select("#" + id);
+
+                    circle.call(
+                      d3
+                        .drag()
+                        .on("start", function (event) {
+                          isDrawing = true;
+                          startX = +circle.attr("cx");
+                          startY = +circle.attr("cy");
+                          startCircle = circle;
+
+                          // Create a new line
+                          line = createLine(startX, startY, startX, startY);
+                        })
+                        .on("drag", function (event) {
+                          if (isDrawing) {
+                            var newX = event.x;
+                            var newY = event.y;
+                            line.attr("x2", newX).attr("y2", newY);
+                          }
+                        })
+                        .on("end", function (event) {
+                          if (isDrawing) {
+                            isDrawing = false;
+                            var endCircle = findClosestCircle(
+                              event.x,
+                              event.y,
+                              circleIds
+                            );
+                            if (endCircle) {
+                              updateLinePosition(
+                                line,
+                                startX,
+                                startY,
+                                +endCircle.attr("cx"),
+                                +endCircle.attr("cy")
+                              );
+                              line
+                                .attr("startCircle", startCircle.attr("id"))
+                                .attr("endCircle", endCircle.attr("id"));
+                            } else {
+                              line.remove(); // Remove the line if no end circle is found
+                            }
+                          }
+                          // Update line positions when any circle is dragged
+                          updateLineOnCircleMove();
+                        })
+                    );
+                  });
+                }
+
+                // Function to enable drag behavior for rectangles, updating associated elements
+                function enableDragBehavior(
+                  rect,
+                  textIds,
+                  lineIds,
+                  circleIds,
+                  groupIds
+                ) {
+                  rect.call(
+                    d3
+                      .drag()
+                      .on("start", function (event) {
+                        var svg = d3.select(this).node().ownerSVGElement;
+
+                        // Check if the parent SVG contains an element with class "heading"
+                        if (!d3.select(svg).select(".heading").empty()) {
+                          d3.select(this).raise().classed("active", true);
+                        }
+                      })
+                      .on("drag", function (event) {
+                        var svg = d3.select(this).node().ownerSVGElement;
+
+                        // Only proceed if the parent SVG contains an element with class "heading"
+                        if (!d3.select(svg).select(".heading").empty()) {
+                          // Update rectangle's position
+                          var newX = +d3.select(this).attr("x") + event.dx;
+                          var newY = +d3.select(this).attr("y") + event.dy;
+                          d3.select(this).attr("x", newX).attr("y", newY);
+
+                          // Update associated text elements
+                          textIds.forEach(function (id) {
+                            d3.select("#" + id)
+                              .raise()
+                              .attr(
+                                "x",
+                                +d3.select("#" + id).attr("x") + event.dx
+                              )
+                              .attr(
+                                "y",
+                                +d3.select("#" + id).attr("y") + event.dy
+                              );
+                          });
+
+                          // Update associated line elements
+                          lineIds.forEach(function (id) {
+                            d3.select("#" + id)
+                              .raise()
+                              .attr(
+                                "x1",
+                                +d3.select("#" + id).attr("x1") + event.dx
+                              )
+                              .attr(
+                                "y1",
+                                +d3.select("#" + id).attr("y1") + event.dy
+                              )
+                              .attr(
+                                "x2",
+                                +d3.select("#" + id).attr("x2") + event.dx
+                              )
+                              .attr(
+                                "y2",
+                                +d3.select("#" + id).attr("y2") + event.dy
+                              );
+                          });
+
+                          // Update associated circle elements
+                          circleIds.forEach(function (id) {
+                            var circle = d3.select("#" + id);
+                            circle
+                              .attr("cx", +circle.attr("cx") + event.dx)
+                              .attr("cy", +circle.attr("cy") + event.dy);
+                            // Raise the circle above the rectangle
+                            circle.raise();
+                          });
+
+                          // Update associated group elements
+                          groupIds.forEach(function (id) {
+                            var group = d3.select(id);
+                            group.raise();
+                            group
+                              .attr(
+                                "x",
+                                +d3.select("#" + id).attr("x") + event.dx
+                              )
+                              .attr(
+                                "y",
+                                +d3.select("#" + id).attr("y") + event.dy
+                              );
+                          });
+
+                          // Update lines connected to circles
+                          updateLineOnCircleMove();
+                        }
+                      })
+                      .on("end", function () {
+                        var svg = d3.select(this).node().ownerSVGElement;
+
+                        // Only proceed if the parent SVG contains an element with class "heading"
+                        if (!d3.select(svg).select(".heading").empty()) {
+                          d3.select(this).classed("active", false);
+                        }
+                      })
+                  );
+                }
+
+                // Usage for rectangles and circles
+                enableDragBehavior(
+                  rect1,
+                  [
+                    "text1",
+                    "text2",
+                    "text3",
+                    "text4",
+                    "text5",
+                    "text6",
+                    "menuIcon",
+                  ],
+                  ["line1", "line2", "line3", "line4", "line5"],
+                  [
+                    "circle1",
+                    "circle2",
+                    "circle3",
+                    "circle4",
+                    "circle5",
+                    "circle6",
+                    "circle7",
+                    "circle8",
+                    "circle9",
+                    "circle10",
+                  ],
+                  []
+                );
+
+                enableDragBehavior(
+                  rect2,
+                  ["text7", "text8", "text9", "text10", "text11", "text12"],
+                  ["line6", "line7", "line8", "line9", "line10"],
+                  [
+                    "circle11",
+                    "circle12",
+                    "circle13",
+                    "circle14",
+                    "circle15",
+                    "circle16",
+                    "circle17",
+                    "circle18",
+                    "circle19",
+                    "circle20",
+                  ],
+                  []
+                );
+
+                enableDragBehavior(
+                  rect3,
+                  ["text13", "text14", "text15", "text16", "text17", "text18"],
+                  ["line11", "line12", "line13", "line14", "line15"],
+                  [
+                    "circle21",
+                    "circle22",
+                    "circle23",
+                    "circle24",
+                    "circle25",
+                    "circle26",
+                    "circle27",
+                    "circle28",
+                    "circle29",
+                    "circle30",
+                  ],
+                  []
+                );
+
+                enableLineDrawing([
+                  "circle1",
+                  "circle2",
+                  "circle3",
+                  "circle4",
+                  "circle5",
+                  "circle6",
+                  "circle7",
+                  "circle8",
+                  "circle9",
+                  "circle10",
+                  "circle11",
+                  "circle12",
+                  "circle13",
+                  "circle14",
+                  "circle15",
+                  "circle16",
+                  "circle17",
+                  "circle18",
+                  "circle19",
+                  "circle20",
+                  "circle21",
+                  "circle22",
+                  "circle23",
+                  "circle24",
+                  "circle25",
+                  "circle26",
+                  "circle27",
+                  "circle28",
+                  "circle29",
+                  "circle30",
+                ]);
+              },
+              error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+              },
+            });
+          },
+          error: function (xhr, status, error) {
+            console.error(xhr.responseText);
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
