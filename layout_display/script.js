@@ -16,6 +16,7 @@ let selectedShape = null;
 let contextMenu = null;
 const history = [];
 const redoStack = [];
+let isResizing = false;
 
 
 // Fetch data from the server
@@ -1192,39 +1193,50 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Dragging within SVG
-    const startDrag = event => {
+    const startDrag = (event) => {
+        // Prevent dragging when interacting with resize handles
+        if (event.target.classList.contains("resize-handle")) {
+            return;
+        }
+    
+        if (isResizing) {
+            return; // Skip drag logic if resizing is active
+        }
+    
         if (event.target.classList.contains("draggable")) {
             selectedShape = event.target;
-            const shapeType = selectedShape.tagName;
-            if (shapeType === "circle") {
+    
+            if (selectedShape.tagName === "circle") {
                 offsetX = event.offsetX - selectedShape.getAttribute("cx");
                 offsetY = event.offsetY - selectedShape.getAttribute("cy");
-            } else if (shapeType === "rect") {
+            } else if (selectedShape.tagName === "rect") {
                 offsetX = event.offsetX - selectedShape.getAttribute("x");
                 offsetY = event.offsetY - selectedShape.getAttribute("y");
-            } else if (shapeType === "polygon") {
-                // Add logic for dragging triangles
+            } else if (selectedShape.tagName === "polygon") {
                 offsetX = 0;
                 offsetY = 0;
             }
+    
             saveState();
             container.addEventListener("mousemove", drag);
             container.addEventListener("mouseup", endDrag);
         }
     };
-
-    const drag = event => {
+    
+    
+    const drag = (event) => {
+        if (isResizing || !selectedShape) return; // Prevent dragging during resizing
+    
         const cellWidth = 10;
         const cellHeight = 10;
-        if (!selectedShape) return;
-
+    
         const svgRect = container.querySelector("svg").getBoundingClientRect();
         const dragX = event.clientX - svgRect.left;
         const dragY = event.clientY - svgRect.top;
-
+    
         const snappedX = Math.floor(dragX / cellWidth) * cellWidth;
         const snappedY = Math.floor(dragY / cellHeight) * cellHeight;
-
+    
         if (selectedShape.tagName === "circle") {
             selectedShape.setAttribute("cx", snappedX + cellWidth / 2);
             selectedShape.setAttribute("cy", snappedY + cellHeight / 2);
@@ -1232,7 +1244,6 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedShape.setAttribute("x", snappedX);
             selectedShape.setAttribute("y", snappedY);
         } else if (selectedShape.tagName === "polygon") {
-            // Adjust triangle points
             const points = `
                 ${snappedX + cellWidth / 2},${snappedY}
                 ${snappedX},${snappedY + cellHeight}
@@ -1241,15 +1252,12 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedShape.setAttribute("points", points.trim());
         }
         saveState();
-        // Update the positions of resize handles if they exist
-        if (selectedShape.resizeHandles) {
-            updateHandles(selectedShape, selectedShape.resizeHandles, 6); // Assuming 6 is the size of the handles
-        }
+        updateHandles(selectedShape, selectedShape.resizeHandles, 6);
     };
-
+    
     const endDrag = () => {
         if (selectedShape) {
-            saveState(); // Save the final state after dragging
+            saveState();
         }
         selectedShape = null;
         container.removeEventListener("mousemove", drag);
@@ -1260,14 +1268,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const resizeHandleSize = 6; // Handle size
         const svg = shape.ownerSVGElement;
         const handles = [];
-
+    
         const positions = [
             { cursor: "nw-resize" },
             { cursor: "ne-resize" },
             { cursor: "sw-resize" },
             { cursor: "se-resize" },
         ];
-
+    
         positions.forEach((pos) => {
             const handle = document.createElementNS(svgNS, "rect");
             handle.setAttribute("width", resizeHandleSize);
@@ -1276,15 +1284,15 @@ document.addEventListener("DOMContentLoaded", function () {
             handle.setAttribute("class", "resize-handle");
             handle.style.cursor = pos.cursor;
             handle.style.display = "none"; // Initially hidden
-
+    
             handle.addEventListener("mousedown", (event) => startResize(event, shape, pos.cursor, handles));
             handles.push(handle);
             svg.appendChild(handle); // Add handles directly to the SVG container
         });
-
+    
         shape.resizeHandles = handles;
         updateHandles(shape, handles, resizeHandleSize);
-
+    
         shape.addEventListener("mouseenter", () => showHandles(handles));
         shape.addEventListener("mouseleave", () => hideHandles(handles));
         shape.addEventListener("mousedown", () => showHandles(handles));
@@ -1305,64 +1313,105 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update function to dynamically position handles
     function updateHandles(shape, handles, handleSize) {
         const shapeBBox = shape.getBBox();
-
+    
         handles[0].setAttribute("x", shapeBBox.x - handleSize / 2); // Top-left
         handles[0].setAttribute("y", shapeBBox.y - handleSize / 2);
-
+    
         handles[1].setAttribute("x", shapeBBox.x + shapeBBox.width - handleSize / 2); // Top-right
         handles[1].setAttribute("y", shapeBBox.y - handleSize / 2);
-
+    
         handles[2].setAttribute("x", shapeBBox.x - handleSize / 2); // Bottom-left
         handles[2].setAttribute("y", shapeBBox.y + shapeBBox.height - handleSize / 2);
-
+    
         handles[3].setAttribute("x", shapeBBox.x + shapeBBox.width - handleSize / 2); // Bottom-right
         handles[3].setAttribute("y", shapeBBox.y + shapeBBox.height - handleSize / 2);
     }
 
 
     function startResize(event, shape, cursor, handles) {
+        isResizing = true; // Set resizing flag
         event.stopPropagation(); // Prevent triggering the shape's drag event
         event.preventDefault();
         showHandles(handles);
-
+    
         const startX = event.clientX;
         const startY = event.clientY;
         const bbox = shape.getBBox();
-
+    
         function doResize(event) {
             let dx = event.clientX - startX;
             let dy = event.clientY - startY;
-
+    
             dx = Math.round(dx / 10) * 10; // Snap resizing
             dy = Math.round(dy / 10) * 10;
-
-            if (cursor === "nw-resize") {
-                shape.setAttribute("x", bbox.x + dx);
-                shape.setAttribute("y", bbox.y + dy);
-                shape.setAttribute("width", Math.max(10, bbox.width - dx));
-                shape.setAttribute("height", Math.max(10, bbox.height - dy));
-            } else if (cursor === "ne-resize") {
-                shape.setAttribute("y", bbox.y + dy);
-                shape.setAttribute("width", Math.max(10, bbox.width + dx));
-                shape.setAttribute("height", Math.max(10, bbox.height - dy));
-            } else if (cursor === "sw-resize") {
-                shape.setAttribute("x", bbox.x + dx);
-                shape.setAttribute("width", Math.max(10, bbox.width - dx));
-                shape.setAttribute("height", Math.max(10, bbox.height + dy));
-            } else if (cursor === "se-resize") {
-                shape.setAttribute("width", Math.max(10, bbox.width + dx));
-                shape.setAttribute("height", Math.max(10, bbox.height + dy));
+    
+            if (shape.tagName === "rect") {
+                if (cursor === "nw-resize") {
+                    shape.setAttribute("x", bbox.x + dx);
+                    shape.setAttribute("y", bbox.y + dy);
+                    shape.setAttribute("width", Math.max(10, bbox.width - dx));
+                    shape.setAttribute("height", Math.max(10, bbox.height - dy));
+                } else if (cursor === "ne-resize") {
+                    shape.setAttribute("y", bbox.y + dy);
+                    shape.setAttribute("width", Math.max(10, bbox.width + dx));
+                    shape.setAttribute("height", Math.max(10, bbox.height - dy));
+                } else if (cursor === "sw-resize") {
+                    shape.setAttribute("x", bbox.x + dx);
+                    shape.setAttribute("width", Math.max(10, bbox.width - dx));
+                    shape.setAttribute("height", Math.max(10, bbox.height + dy));
+                } else if (cursor === "se-resize") {
+                    shape.setAttribute("width", Math.max(10, bbox.width + dx));
+                    shape.setAttribute("height", Math.max(10, bbox.height + dy));
+                }
+            } else if (shape.tagName === "circle") {
+                const radiusChange = Math.max(dx, dy); // Use the larger of dx or dy to maintain aspect ratio
+                let newRadius = parseFloat(shape.getAttribute("r")) + radiusChange;
+            
+                // Ensure minimum radius to avoid collapse
+                newRadius = Math.max(5, newRadius);
+                shape.setAttribute("r", newRadius);
+            
+                // Update handles after resizing
+                updateHandles(shape, handles, handleSize);
             }
-
+             else if (shape.tagName === "polygon") {
+                const points = shape.getAttribute("points").split(" ").map((point) => {
+                    let [px, py] = point.split(",").map(Number);
+            
+                    if (cursor === "nw-resize") {
+                        px += dx;
+                        py += dy;
+                    } else if (cursor === "ne-resize") {
+                        px += dx;
+                        py += dy; // Adjust these calculations for your desired resizing direction
+                    } else if (cursor === "sw-resize") {
+                        px += dx;
+                        py += dy;
+                    } else if (cursor === "se-resize") {
+                        px += dx;
+                        py += dy;
+                    }
+            
+                    return `${px},${py}`;
+                });
+            
+                shape.setAttribute("points", points.join(" "));
+                updateHandles(shape, handles, handleSize);
+            }
+            
+            
+    
             updateHandles(shape, handles, 6);
         }
-
+    
         function stopResize() {
+            isResizing = false; // Reset resizing flag
             document.removeEventListener("mousemove", doResize);
             document.removeEventListener("mouseup", stopResize);
             hideHandles(handles);
+            saveState(); // Save the final state after resizing
         }
-
+    
         document.addEventListener("mousemove", doResize);
         document.addEventListener("mouseup", stopResize);
     }
